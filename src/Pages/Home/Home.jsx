@@ -40,7 +40,7 @@ export const Home = () => {
           <span className="font-medium">Add New Patient</span>
         </Link>
         <Link
-          to="/prescriptions/new"
+          to="/prescriptions/write"
           className="bg-indigo-500 hover:bg-indigo-600 text-white p-5 rounded-lg flex items-center gap-4 transition"
         >
           <ClipboardList />

@@ -16,6 +16,9 @@ import { WritePrescription } from "../Pages/Prescription/WritePrescription";
 import { Reports } from "../Pages/Reports/Reports";
 import { PrescriptionHistory } from "../Pages/History/PrescriptionHistory";
 import { ViewPrescription } from "../Pages/History/ViewPrescription";
+import { Medicines } from "../Pages/Medicines/Medicines";
+import { Settings } from "../Pages/Settings/Settings";
+import { Help } from "../Pages/Help/Help";
 
 export const router = createBrowserRouter([
   {
@@ -86,7 +89,7 @@ export const router = createBrowserRouter([
         path: "/medicines",
         element: (
           <PageWithTitle title="Master Medicine List">
-            <div>Medicine List Page (Coming Soon)</div>
+            <Medicines />
           </PageWithTitle>
         ),
       },
@@ -94,7 +97,7 @@ export const router = createBrowserRouter([
         path: "/settings",
         element: (
           <PageWithTitle title="Doctor Settings">
-            <div>Settings Page (Coming Soon)</div>
+            <Settings />
           </PageWithTitle>
         ),
       },
@@ -102,7 +105,7 @@ export const router = createBrowserRouter([
         path: "/help",
         element: (
           <PageWithTitle title="Support & Help">
-            <div>Help Page (Coming Soon)</div>
+            <Help />
           </PageWithTitle>
         ),
       },

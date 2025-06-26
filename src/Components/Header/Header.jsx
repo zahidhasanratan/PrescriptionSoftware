@@ -1,188 +1,88 @@
-import { Link } from "react-router-dom";
-import { FaLeaf } from "react-icons/fa";
-import React, { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../../Provider/AuthProvider";
+import React, { useState, useEffect, useRef } from "react";
+import { Menu, LogOut, ChevronDown } from "lucide-react";
 
-export const Header = () => {
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [theme, setTheme] = useState("light");
-  const { user, logout } = useContext(AuthContext);
+export const Header = ({ onMenuClick, onLogout }) => {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
+  // Close dropdown if clicked outside
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setTheme(savedTheme);
-    document.documentElement.setAttribute("data-theme", savedTheme);
-  }, []);
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
 
-  const toggleMenu = () => setMobileMenuOpen(!isMobileMenuOpen);
-  const handleLogout = () => logout();
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem("theme", newTheme);
-  };
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   return (
-    <header className="bg-base-200 sticky top-0 z-50 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-green-600 hover:text-green-700 transition"
-          >
-            <FaLeaf className="text-green-600 text-3xl" />
-            Garden Hub
-          </Link>
-        </h1>
+    <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 bg-white shadow-md border-b">
+      {/* Mobile menu button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onMenuClick();
+        }}
+        className="md:hidden text-teal-600 hover:text-teal-700 transition"
+        aria-label="Open Menu"
+        data-menu-button
+      >
+        <Menu size={28} />
+      </button>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex space-x-6 items-center text-base-content">
-          <Link to="/" className="hover:text-primary font-medium transition">
-            Home
-          </Link>
-          <Link
-            to="/exploreGardeners"
-            className="hover:text-primary font-medium transition"
-          >
-            Explore Gardeners
-          </Link>
-          <Link
-            to="/BrowseTips"
-            className="hover:text-primary font-medium transition"
-          >
-            Browse Tips
-          </Link>
-          {user && (
-            <>
-              <Link
-                to="/ShareTip"
-                className="hover:text-primary font-medium transition"
-              >
-                Share a Garden Tip
-              </Link>
-              <Link
-                to="/mytips"
-                className="hover:text-primary font-medium transition"
-              >
-                My Tips
-              </Link>
-            </>
-          )}
+      {/* App title */}
+      <h1 className="text-xl font-bold text-teal-900">Smart Prescription App</h1>
 
-          <button
-            onClick={toggleTheme}
-            className="btn btn-sm btn-outline"
-            aria-label="Toggle Theme"
-          >
-            {theme === "light" ? "🌙 Dark" : "☀️ Light"}
-          </button>
-
-          {!user ? (
-            <Link to="/login">
-              <button className="btn btn-primary">Login/SignUp</button>
-            </Link>
-          ) : (
-            <div className="relative">
-              <img
-                src={user.photoURL}
-                alt="User"
-                title={user.displayName}
-                className="w-10 h-10 rounded-full cursor-pointer border border-primary"
-                onClick={() => setShowDropdown(!showDropdown)}
-              />
-              {showDropdown && (
-                <div className="absolute right-0 mt-2 w-40 bg-base-100 shadow-lg rounded-md overflow-hidden z-50">
-                  <div className="px-4 py-2 text-sm font-semibold border-b text-primary">
-                    {user.displayName}
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm text-error hover:bg-error/10 transition"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </nav>
-
-        <div className="md:hidden flex items-center gap-2">
-          <button
-            onClick={toggleTheme}
-            className="btn btn-sm btn-outline"
-            aria-label="Toggle Theme"
-          >
-            {theme === "light" ? "🌙" : "☀️"}
-          </button>
-
-          <button
-            onClick={toggleMenu}
-            className="text-primary text-2xl focus:outline-none"
-            aria-label="Toggle Menu"
-          >
-            ☰
-          </button>
+      {/* Profile section with dropdown */}
+      <div
+        ref={dropdownRef}
+        className="relative flex items-center gap-2 cursor-pointer select-none"
+        onClick={() => setDropdownOpen((open) => !open)}
+        aria-haspopup="true"
+        aria-expanded={dropdownOpen}
+      >
+        <div className="text-sm text-right">
+          <p className="font-semibold">Dr. A. Karim</p>
+          <p className="text-xs text-gray-500">MBBS, FCPS (Medicine)</p>
         </div>
-      </div>
+        <div className="w-10 h-10 rounded-full overflow-hidden border border-teal-600">
+          <img
+            src="https://i.pravatar.cc/100?img=3"
+            alt="Doctor"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <ChevronDown size={20} className="text-gray-500" />
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <nav className="md:hidden px-4 pb-4 space-y-2 bg-base-200 shadow text-base-content">
-          <Link to="/" className="block hover:text-primary font-medium">
-            Home
-          </Link>
-          <Link
-            to="/exploreGardeners"
-            className="block hover:text-primary font-medium"
-          >
-            Explore Gardeners
-          </Link>
-          <Link
-            to="/BrowseTips"
-            className="block hover:text-primary font-medium"
-          >
-            Browse Tips
-          </Link>
-          {user && (
-            <>
-              <Link
-                to="/ShareTip"
-                className="block hover:text-primary font-medium"
-              >
-                Share a Garden Tip
-              </Link>
-              <Link
-                to="/mytips"
-                className="block hover:text-primary font-medium"
-              >
-                My Tips
-              </Link>
-            </>
-          )}
-
-          <button
-            onClick={toggleTheme}
-            className="btn btn-sm btn-outline w-full"
-            aria-label="Toggle Theme"
-          >
-            {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
-          </button>
-
-          {!user ? (
-            <Link to="/login">
-              <button className="btn btn-primary w-full">Login/SignUp</button>
-            </Link>
-          ) : (
-            <button onClick={handleLogout} className="btn btn-error w-full">
+        {/* Dropdown menu */}
+        {dropdownOpen && (
+          <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDropdownOpen(false);
+                onLogout();
+              }}
+              className="flex items-center gap-2 w-full px-4 py-2 text-left text-gray-700 hover:bg-red-100 hover:text-red-700 transition"
+            >
+              <LogOut size={18} />
               Logout
             </button>
-          )}
-        </nav>
-      )}
+          </div>
+        )}
+      </div>
     </header>
   );
 };

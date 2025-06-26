@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Menu, LogOut, ChevronDown } from "lucide-react";
 
-export const Header = ({ onMenuClick, onLogout }) => {
+export const Header = ({ onMenuClick, onLogout, user }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     };
@@ -26,6 +22,11 @@ export const Header = ({ onMenuClick, onLogout }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [dropdownOpen]);
+
+  const displayName = user?.displayName || "Guest User";
+  const photoURL =
+    user?.photoURL ||
+    "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between px-6 py-4 bg-white shadow-md border-b">
@@ -53,20 +54,14 @@ export const Header = ({ onMenuClick, onLogout }) => {
         aria-haspopup="true"
         aria-expanded={dropdownOpen}
       >
-        <div className="text-sm text-right">
-          <p className="font-semibold">Dr. A. Karim</p>
-          <p className="text-xs text-gray-500">MBBS, FCPS (Medicine)</p>
+        <div className="text-sm text-right max-w-[140px] truncate">
+          <p className="font-semibold truncate">{displayName}</p>
         </div>
-        <div className="w-10 h-10 rounded-full overflow-hidden border border-teal-600">
-          <img
-            src="https://i.pravatar.cc/100?img=3"
-            alt="Doctor"
-            className="w-full h-full object-cover"
-          />
+        <div className="w-10 h-10 rounded-full overflow-hidden border border-teal-600 flex-shrink-0">
+          <img src={photoURL} alt={displayName} className="w-full h-full object-cover" />
         </div>
         <ChevronDown size={20} className="text-gray-500" />
 
-        {/* Dropdown menu */}
         {dropdownOpen && (
           <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-50">
             <button

@@ -1,14 +1,13 @@
 // src/routes/router.jsx
-import React, { Suspense } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import React, { Suspense, useContext } from "react";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { Root } from "../Pages/Root/Root";
-import { PlainLayout } from "../layouts/PlainLayout"; // import your PlainLayout
+import { PlainLayout } from "../layouts/PlainLayout";
 import { Home } from "../Pages/Home/Home";
 import { ErrorPage } from "../Pages/ErrorPage";
 import { Login } from "../Pages/Login/Login";
 import { Register } from "../Pages/Register/Register";
-import PrivateRoute from "./PrivateRoute";
 import { Loader } from "../Components/Loader";
 import { PageWithTitle } from "../Components/PageWithTitle";
 import { Patient } from "../Pages/Patient/Patient";
@@ -21,9 +20,32 @@ import { Medicines } from "../Pages/Medicines/Medicines";
 import { Settings } from "../Pages/Settings/Settings";
 import { Help } from "../Pages/Help/Help";
 
+import { AuthContext } from "../Provider/AuthProvider";
+
+const PrivateRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    // Show loading while auth state is loading
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    // Redirect to login if not authenticated
+    return <Navigate to="/login" replace />;
+  }
+
+  // User is authenticated, render children
+  return children;
+};
+
 export const router = createBrowserRouter([
   {
-    element: <Root />,      // Main layout with sidebar/header/footer
+    element: (
+      <PrivateRoute>
+        <Root />
+      </PrivateRoute>
+    ),
     errorElement: <ErrorPage />,
     children: [
       {
@@ -112,7 +134,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    element: <PlainLayout />,   // Minimal layout for auth pages
+    element: <PlainLayout />, // Minimal layout for auth pages
     children: [
       {
         path: "/login",

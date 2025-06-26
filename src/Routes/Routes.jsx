@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
 import { Root } from "../Pages/Root/Root";
+import { PlainLayout } from "../layouts/PlainLayout"; // import your PlainLayout
 import { Home } from "../Pages/Home/Home";
 import { ErrorPage } from "../Pages/ErrorPage";
 import { Login } from "../Pages/Login/Login";
@@ -22,11 +23,11 @@ import { Help } from "../Pages/Help/Help";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Root />,
+    element: <Root />,      // Main layout with sidebar/header/footer
     errorElement: <ErrorPage />,
     children: [
       {
+        path: "/",
         index: true,
         element: (
           <Suspense fallback={<Loader />}>
@@ -52,7 +53,7 @@ export const router = createBrowserRouter([
           </PageWithTitle>
         ),
       },
- {
+      {
         path: "/prescriptions/write",
         element: (
           <PageWithTitle title="Write Prescriptions">
@@ -60,7 +61,6 @@ export const router = createBrowserRouter([
           </PageWithTitle>
         ),
       },
-      
       {
         path: "/reports",
         element: (
@@ -109,6 +109,11 @@ export const router = createBrowserRouter([
           </PageWithTitle>
         ),
       },
+    ],
+  },
+  {
+    element: <PlainLayout />,   // Minimal layout for auth pages
+    children: [
       {
         path: "/login",
         element: (
@@ -126,5 +131,9 @@ export const router = createBrowserRouter([
         ),
       },
     ],
+  },
+  {
+    path: "*",
+    element: <ErrorPage />, // catch-all 404 fallback
   },
 ]);

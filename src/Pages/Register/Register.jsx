@@ -34,8 +34,9 @@ export const Register = () => {
       Swal.fire({
         icon: "error",
         title: "Invalid Password",
-        text: "Password must be at least 8 characters and include uppercase, lowercase, and a special character.",
-        confirmButtonColor: "#16a34a",
+        text:
+          "Password must be at least 8 characters and include uppercase, lowercase, and a special character.",
+        confirmButtonColor: "#14b8a6", // teal-500
       });
       return;
     }
@@ -60,7 +61,7 @@ export const Register = () => {
         icon: "error",
         title: "Registration Failed",
         text: error.message,
-        confirmButtonColor: "#16a34a",
+        confirmButtonColor: "#14b8a6",
       });
     }
   };
@@ -85,23 +86,23 @@ export const Register = () => {
         icon: "error",
         title: "Google Sign-In Failed",
         text: error.message,
-        confirmButtonColor: "#16a34a",
+        confirmButtonColor: "#14b8a6",
       });
     }
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-green-50 px-4">
+    <section className="min-h-screen flex items-center justify-center bg-teal-50 px-4">
       <Zoom triggerOnce>
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+          <h2 className="text-3xl font-bold text-teal-700 mb-6 text-center">
             Register for Garden Hub
           </h2>
 
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-5">
             {["name", "email", "photoURL", "password"].map((field) => (
               <div key={field}>
-                <label className="block text-sm font-medium text-green-800 capitalize">
+                <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">
                   {field === "photoURL" ? "Photo URL" : field}
                 </label>
                 <input
@@ -109,7 +110,6 @@ export const Register = () => {
                   name={field}
                   required
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                   placeholder={
                     field === "photoURL"
                       ? "https://your-photo-url.com"
@@ -119,29 +119,30 @@ export const Register = () => {
                       ? "••••••••"
                       : "John Doe"
                   }
+                  className="w-full px-4 py-3 border border-teal-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
             ))}
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+              className="w-full bg-teal-600 text-white py-3 rounded-md font-semibold hover:bg-teal-700 transition"
             >
               Register
             </button>
           </form>
 
-          <div className="mt-6 flex items-center justify-center space-x-3">
-            <hr className="w-16 border-green-300" />
-            <span className="text-green-600 font-semibold">OR</span>
-            <hr className="w-16 border-green-300" />
+          <div className="mt-8 flex items-center justify-center space-x-3">
+            <hr className="w-16 border-teal-300" />
+            <span className="text-teal-600 font-semibold">OR</span>
+            <hr className="w-16 border-teal-300" />
           </div>
 
           <button
             onClick={handleGoogleSignIn}
-            className="mt-6 w-full flex items-center justify-center border border-gray-300 rounded py-2 hover:bg-gray-100 transition"
+            className="mt-8 w-full flex items-center justify-center gap-3 border border-teal-400 py-3 rounded-md text-teal-700 font-semibold hover:bg-teal-100 transition"
           >
-            <FcGoogle className="text-2xl mr-3" />
+            <FcGoogle className="text-2xl" />
             Continue with Google
           </button>
         </div>

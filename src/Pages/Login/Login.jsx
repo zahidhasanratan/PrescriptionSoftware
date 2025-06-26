@@ -40,7 +40,7 @@ export const Login = () => {
         icon: "error",
         title: "Login Failed",
         text: error.message,
-        confirmButtonColor: "#16a34a",
+        confirmButtonColor: "#14b8a6", // teal-500
       });
     }
   };
@@ -65,22 +65,22 @@ export const Login = () => {
         icon: "error",
         title: "Google Sign-In Failed",
         text: error.message,
-        confirmButtonColor: "#16a34a",
+        confirmButtonColor: "#14b8a6",
       });
     }
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-green-50 px-4">
+    <section className="min-h-screen flex items-center justify-center bg-teal-50 px-4">
       <Zoom triggerOnce>
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+          <h2 className="text-3xl font-bold text-teal-700 mb-6 text-center">
             Login to Garden Hub
           </h2>
 
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          <form onSubmit={handleEmailLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-green-800">
+              <label className="block text-sm font-semibold text-teal-700 mb-1">
                 Email
               </label>
               <input
@@ -89,13 +89,13 @@ export const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="you@example.com"
+                className="w-full px-4 py-3 border border-teal-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-green-800">
+              <label className="block text-sm font-semibold text-teal-700 mb-1">
                 Password
               </label>
               <input
@@ -104,31 +104,32 @@ export const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-green-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
                 placeholder="••••••••"
+                className="w-full px-4 py-3 border border-teal-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+              className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 rounded-md font-semibold transition"
             >
               Login
             </button>
           </form>
 
-          <div className="my-4 text-center text-sm text-gray-500">OR</div>
+          <div className="my-6 text-center text-sm text-teal-600 font-semibold">OR</div>
 
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-2 border border-green-400 py-2 rounded hover:bg-green-100 transition"
+            className="w-full flex items-center justify-center gap-3 border border-teal-400 py-3 rounded-md text-teal-700 font-semibold hover:bg-teal-100 transition"
           >
-            <FaGoogle className="text-green-600" /> Login with Google
+            <FaGoogle size={20} />
+            Login with Google
           </button>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-8 text-center text-sm text-teal-700">
             Don’t have an account?{" "}
-            <Link to="/register" className="text-green-700 hover:underline">
+            <Link to="/register" className="underline font-semibold hover:text-teal-900">
               Register here
             </Link>
           </p>

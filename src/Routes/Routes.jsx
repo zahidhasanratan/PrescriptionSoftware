@@ -14,6 +14,8 @@ import { Patient } from "../Pages/Patient/Patient";
 import { Prescription } from "../Pages/Prescription/Prescription";
 import { WritePrescription } from "../Pages/Prescription/WritePrescription";
 import { Reports } from "../Pages/Reports/Reports";
+import { PrescriptionHistory } from "../Pages/History/PrescriptionHistory";
+import { ViewPrescription } from "../Pages/History/ViewPrescription";
 
 export const router = createBrowserRouter([
   {
@@ -68,7 +70,15 @@ export const router = createBrowserRouter([
         path: "/history",
         element: (
           <PageWithTitle title="Prescription History">
-            <div>History Page (Coming Soon)</div>
+            <PrescriptionHistory />
+          </PageWithTitle>
+        ),
+      },
+      {
+        path: "/historyView/:id",
+        element: (
+          <PageWithTitle title="View Prescription">
+            <ViewPrescription />
           </PageWithTitle>
         ),
       },

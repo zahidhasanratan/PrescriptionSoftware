@@ -80,8 +80,7 @@ export const Prescription = () => {
             {demoPrescriptions.map((p) => (
               <tr
                 key={p.id}
-                className="hover:bg-teal-50 transition cursor-pointer"
-                onClick={() => alert(`Viewing prescription for ${p.patientName}`)}
+                className="hover:bg-teal-50 transition"
               >
                 <td className="border border-gray-300 px-4 py-2">{p.patientName}</td>
                 <td className="border border-gray-300 px-4 py-2">{p.date}</td>
@@ -97,20 +96,14 @@ export const Prescription = () => {
                 <td className="border border-gray-300 px-4 py-2 text-center font-semibold">{p.medicinesCount}</td>
                 <td className="border border-gray-300 px-4 py-2 text-center flex justify-center gap-2">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alert(`View prescription ${p.id} details`);
-                    }}
+                    onClick={() => navigate(`/historyView/${p.id}`)}
                     title="View"
                     className="text-teal-600 hover:text-teal-800"
                   >
                     <Eye size={18} />
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alert(`Edit prescription ${p.id}`);
-                    }}
+                    onClick={() => navigate(`/prescriptions/edit/${p.id}`)}
                     title="Edit"
                     className="text-yellow-600 hover:text-yellow-800"
                   >

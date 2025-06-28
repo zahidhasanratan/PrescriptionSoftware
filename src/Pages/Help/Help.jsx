@@ -89,7 +89,7 @@ export const Help = () => {
           <Mail size={18} className="text-teal-600" />
           <span>
             For further help, email us at{" "}
-            <span className="text-teal-700 font-medium">support@yourclinic.com</span>
+            <span className="text-teal-700 font-medium">support@esoft.com.bd</span>
           </span>
         </div>
       </div>

@@ -16,20 +16,22 @@ export const EditPatient = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch patient data by patientId
     const fetchPatient = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/patients`);
+        const res = await fetch("http://localhost:5000/api/patients");
         if (!res.ok) throw new Error("Failed to fetch patient data");
         const data = await res.json();
-        const patient = data.find(p => p.patientId === patientId);
+
+        const patient = data.find((p) => p.patientId === patientId);
         if (!patient) throw new Error("Patient not found");
+
         setFormData({
-          name: patient.name,
-          age: patient.age,
-          gender: patient.gender,
-          phone: patient.phone,
+          name: patient.name || "",
+          age: patient.age || "",
+          gender: patient.gender || "Male",
+          phone: patient.phone || "",
         });
+
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -41,29 +43,37 @@ export const EditPatient = () => {
   }, [patientId]);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.name || !formData.age || !formData.phone) {
+      return Swal.fire("Warning", "All fields are required.", "warning");
+    }
+
     try {
-      const res = await fetch(`http://localhost:5000/patients/${patientId}`, {
+      const res = await fetch(`http://localhost:5000/api/patients/${patientId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, age: parseInt(formData.age) }),
       });
 
-      if (!res.ok) throw new Error("Failed to update patient");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Failed to update patient");
+      }
 
       Swal.fire("Success", "Patient updated successfully!", "success");
       navigate("/patients");
     } catch (err) {
-      Swal.fire("Error", err.message, "error");
+      Swal.fire("Error", err.message || "Something went wrong", "error");
     }
   };
 
-  if (loading) return <p className="p-8 text-center">Loading...</p>;
+  if (loading) return <p className="p-8 text-center">Loading patient data...</p>;
   if (error) return <p className="p-8 text-center text-red-500">{error}</p>;
 
   return (
@@ -86,6 +96,7 @@ export const EditPatient = () => {
           onChange={handleChange}
           className="input input-bordered w-full"
           required
+          min={0}
         />
         <select
           name="gender"

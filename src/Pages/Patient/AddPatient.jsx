@@ -4,14 +4,13 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 export const AddPatient = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     age: "",
     gender: "Male",
     phone: "",
   });
-
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,25 +19,31 @@ export const AddPatient = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Basic client-side validation
+    if (!formData.name || !formData.age || !formData.phone) {
+      return Swal.fire("Validation Error", "Please fill in all required fields.", "warning");
+    }
+
     const newPatient = {
       ...formData,
       age: parseInt(formData.age),
-      patientId: Date.now().toString(), // Or use uuid
+      patientId: `P${Date.now()}`, // Prefix for clarity (e.g., P171234567890)
     };
 
     try {
-      const res = await fetch("http://localhost:5000/patients", {
+      const res = await fetch("http://localhost:5000/api/patients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPatient),
       });
 
-      if (res.ok) {
-        Swal.fire("Success", "Patient added successfully!", "success");
-        navigate("/patients");
-      } else {
-        throw new Error("Failed to add patient");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to add patient");
       }
+
+      Swal.fire("Success", "Patient added successfully!", "success");
+      navigate("/patients");
     } catch (error) {
       Swal.fire("Error", error.message, "error");
     }
@@ -64,6 +69,7 @@ export const AddPatient = () => {
           onChange={handleChange}
           className="input input-bordered w-full"
           required
+          min={0}
         />
         <select
           name="gender"
@@ -83,7 +89,6 @@ export const AddPatient = () => {
           className="input input-bordered w-full"
           required
         />
-
         <button className="btn btn-primary w-full" type="submit">
           Save Patient
         </button>

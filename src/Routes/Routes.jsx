@@ -1,4 +1,3 @@
-// src/routes/router.jsx
 import React, { Suspense, useContext } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
@@ -10,6 +9,7 @@ import { Login } from "../Pages/Login/Login";
 import { Register } from "../Pages/Register/Register";
 import { Loader } from "../Components/Loader";
 import { PageWithTitle } from "../Components/PageWithTitle";
+
 import { Patient } from "../Pages/Patient/Patient";
 import { Prescription } from "../Pages/Prescription/Prescription";
 import { WritePrescription } from "../Pages/Prescription/WritePrescription";
@@ -21,21 +21,16 @@ import { Settings } from "../Pages/Settings/Settings";
 import { Help } from "../Pages/Help/Help";
 
 import { AuthContext } from "../Provider/AuthProvider";
+import { AddPatient } from "../Pages/Patient/AddPatient";
+import { EditPatient } from "../Pages/Patient/EditPatient";
+import { PatientDetails } from "../Pages/Patient/PatientDetails";
 
+// 🔒 Private Route wrapper with custom loader
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
 
-  if (loading) {
-    // Show loading while auth state is loading
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    // Redirect to login if not authenticated
-    return <Navigate to="/login" replace />;
-  }
-
-  // User is authenticated, render children
+  if (loading) return <Loader />;
+  if (!user) return <Navigate to="/login" replace />;
   return children;
 };
 
@@ -60,10 +55,34 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/add-patient",
+        element: (
+          <PageWithTitle title="Add Patient">
+            <AddPatient />
+          </PageWithTitle>
+        ),
+      },
+      {
         path: "/patients",
         element: (
           <PageWithTitle title="Manage Patients">
             <Patient />
+          </PageWithTitle>
+        ),
+      },
+      {
+        path: "/edit-patient/:patientId",
+        element: (
+          <PageWithTitle title="Edit Patient">
+            <EditPatient />
+          </PageWithTitle>
+        ),
+      },
+      {
+        path: "/patient/:patientId",
+        element: (
+          <PageWithTitle title="Patient Details">
+            <PatientDetails />
           </PageWithTitle>
         ),
       },
@@ -134,7 +153,8 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    element: <PlainLayout />, // Minimal layout for auth pages
+    // Public routes like login/register
+    element: <PlainLayout />,
     children: [
       {
         path: "/login",
@@ -156,6 +176,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <ErrorPage />, // catch-all 404 fallback
+    element: <ErrorPage />,
   },
 ]);

@@ -7,7 +7,7 @@ import Swal from "sweetalert2";
 export const Medicines = () => {
   const [medicines, setMedicines] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [newMed, setNewMed] = useState({ name: "", types: "", commonStrengths: "" });
+  const [newMed, setNewMed] = useState({ name: "", types: "", commonStrengths: "", defaultDosage: "", usageAdvice: "" });
   const [editingMed, setEditingMed] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
@@ -28,27 +28,29 @@ export const Medicines = () => {
   }, []);
 
   const handleAdd = async () => {
-    const payload = {
-      name: newMed.name.trim(),
-      types: newMed.types.split(",").map((t) => t.trim()),
-      commonStrengths: newMed.commonStrengths.split(",").map((s) => s.trim()),
-      commonDosages: [],
-      commonAdvices: [],
-    };
-
-    if (!payload.name || payload.types.length === 0 || payload.commonStrengths.length === 0) {
-      return Swal.fire("Required", "Please fill in all required fields.", "warning");
-    }
-
-    try {
-      await axios.post("/api/medicines", payload);
-      setNewMed({ name: "", types: "", commonStrengths: "" });
-      fetchMedicines();
-      Swal.fire("Success", "Medicine added successfully!", "success");
-    } catch (err) {
-      Swal.fire("Error", "Failed to add medicine.", "error");
-    }
+  const payload = {
+    name: newMed.name.trim(),
+    types: newMed.types.split(",").map((t) => t.trim()),
+    commonStrengths: newMed.commonStrengths.split(",").map((s) => s.trim()),
+    defaultDosage: newMed.defaultDosage.trim(),
+    usageAdvice: newMed.usageAdvice.trim(),
   };
+
+  if (!payload.name || payload.types.length === 0 || payload.commonStrengths.length === 0) {
+    return Swal.fire("Required", "Please fill in all required fields.", "warning");
+  }
+
+  try {
+    await axios.post("/api/medicines", payload);
+    setNewMed({ name: "", types: "", commonStrengths: "", defaultDosage: "", usageAdvice: "" });
+    fetchMedicines();
+    Swal.fire("Success", "Medicine added successfully!", "success");
+  } catch (err) {
+    console.error("Add Error →", err.response?.data || err.message);
+    Swal.fire("Error", "Failed to add medicine.", "error");
+  }
+};
+
 
   const handleDelete = async (id) => {
     const confirm = await Swal.fire({
@@ -71,18 +73,26 @@ export const Medicines = () => {
   };
 
   const handleEditClick = (med) => {
-    setEditingMed({ ...med, types: med.types.join(", "), commonStrengths: med.commonStrengths.join(", ") });
+    setEditingMed({
+      ...med,
+      types: med.types.join(", "),
+      commonStrengths: med.commonStrengths.join(", "),
+      defaultDosage: med.defaultDosage || "",
+      usageAdvice: med.usageAdvice || "",
+    });
   };
 
   const saveEdit = async () => {
-    const { _id, name, types, commonStrengths } = editingMed;
+    const { _id, name, types, commonStrengths, defaultDosage, usageAdvice } = editingMed;
     if (!name.trim() || !types.trim() || !commonStrengths.trim()) {
-      return Swal.fire("Required", "Please fill in all fields.", "warning");
+      return Swal.fire("Required", "Please fill in all required fields.", "warning");
     }
     const payload = {
       name: name.trim(),
       types: types.split(",").map((t) => t.trim()),
       commonStrengths: commonStrengths.split(",").map((s) => s.trim()),
+      defaultDosage: defaultDosage.trim(),
+      usageAdvice: usageAdvice.trim(),
     };
     try {
       await axios.put(`/api/medicines/${_id}`, payload);
@@ -156,6 +166,20 @@ export const Medicines = () => {
           className="input input-bordered w-full"
           value={newMed.commonStrengths}
           onChange={(e) => setNewMed({ ...newMed, commonStrengths: e.target.value })}
+        />
+        <input
+          type="text"
+          placeholder="Default Dosage (e.g. 1+0+1)"
+          className="input input-bordered w-full"
+          value={newMed.defaultDosage}
+          onChange={(e) => setNewMed({ ...newMed, defaultDosage: e.target.value })}
+        />
+        <input
+          type="text"
+          placeholder="Default Advice (e.g. After Meal)"
+          className="input input-bordered w-full"
+          value={newMed.usageAdvice}
+          onChange={(e) => setNewMed({ ...newMed, usageAdvice: e.target.value })}
         />
         <button
           onClick={handleAdd}
@@ -248,9 +272,23 @@ export const Medicines = () => {
             />
             <input
               type="text"
-              className="input input-bordered w-full mb-4"
+              className="input input-bordered w-full mb-3"
               value={editingMed.commonStrengths}
               onChange={(e) => setEditingMed({ ...editingMed, commonStrengths: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Default Dosage (e.g. 1+0+1)"
+              className="input input-bordered w-full mb-3"
+              value={editingMed.defaultDosage}
+              onChange={(e) => setEditingMed({ ...editingMed, defaultDosage: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="Default Advice (e.g. After Meal)"
+              className="input input-bordered w-full mb-4"
+              value={editingMed.usageAdvice}
+              onChange={(e) => setEditingMed({ ...editingMed, usageAdvice: e.target.value })}
             />
             <button
               onClick={saveEdit}

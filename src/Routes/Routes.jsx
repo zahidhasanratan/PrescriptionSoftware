@@ -24,6 +24,7 @@ import { AuthContext } from "../Provider/AuthProvider";
 import { AddPatient } from "../Pages/Patient/AddPatient";
 import { EditPatient } from "../Pages/Patient/EditPatient";
 import { PatientDetails } from "../Pages/Patient/PatientDetails";
+import { PrescriptionDetails } from "../Pages/Prescription/PrescriptionDetails";
 
 // 🔒 Private Route wrapper with custom loader
 const PrivateRoute = ({ children }) => {
@@ -102,6 +103,16 @@ export const router = createBrowserRouter([
           </PageWithTitle>
         ),
       },
+
+       {
+        path: "/prescriptions/:id",
+        element: (
+          <PageWithTitle title="Write Details">
+            <PrescriptionDetails />
+          </PageWithTitle>
+        ),
+      },
+     
       {
         path: "/reports",
         element: (

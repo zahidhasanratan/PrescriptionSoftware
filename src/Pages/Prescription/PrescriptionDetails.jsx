@@ -21,24 +21,25 @@ const css = `
 `;
 
 function PrescriptionDetailsInner() {
-  const { id }       = useParams();
-  const navigate     = useNavigate();
-  const [doc, setDoc] = useState(null);
-  const [state, setState] = useState/** `"loading" | "ready" | "error"` */("loading");
+  const { id }   = useParams();
+  const navigate = useNavigate();
+  const [doc,   setDoc]   = useState(null);
+  const [state, setState] = useState("loading"); // "loading" | "ready" | "error"
 
+  /* fetch once */
   useEffect(() => {
     let cancel = false;
     axios
       .get(`http://localhost:5000/api/prescriptions/${id}`)
       .then(({ data }) => !cancel && (setDoc(data), setState("ready")))
-      .catch((err) => {
+      .catch(err => {
         console.error("Fetch error:", err?.response || err);
-        if (!cancel) setState("error");
+        !cancel && setState("error");
       });
-    return () => { cancel = true };
+    return () => { cancel = true; };
   }, [id]);
 
-  /* ---- UI states ---- */
+  /* fallback states */
   if (state === "loading") return <p className="p-10 text-center">Loading…</p>;
   if (state === "error")   return (
     <div className="p-10 text-center space-y-4">
@@ -48,37 +49,35 @@ function PrescriptionDetailsInner() {
       </button>
     </div>
   );
-  if (!doc) return null;                // should not happen
+  if (!doc) return null;
 
   const { patient, medicines, notes, createdAt } = doc;
 
-  /* ---- Render printable sheet ---- */
+  /* ---------------- render sheet ---------------- */
   return (
     <>
       <style>{css}</style>
 
       <div className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative overflow-hidden">
-        <div className="brand-watermark">BRAND</div>
+        {/* optional <div className="brand-watermark">BRAND</div> */}
 
-        {/* top bar */}
+        {/* header bar */}
         <table className="w-full text-sm border-b">
           <tbody>
             <tr className="divide-x">
-              <td className="p-1"><strong>Name:</strong> {patient?.name || "--"}</td>
-              <td className="p-1 w-24"><strong>Age:</strong> {patient?.age || "--"}</td>
-              <td className="p-1 w-28"><strong>Sex:</strong> {patient?.gender || "--"}</td>
+              <td className="p-1"><strong>Name:</strong> {patient?.name || "—"}</td>
+              <td className="p-1 w-24"><strong>Age:</strong> {patient?.age || "—"}</td>
+              <td className="p-1 w-28"><strong>Sex:</strong> {patient?.gender || "—"}</td>
               <td className="p-1 w-36"><strong>Date:</strong> {new Date(createdAt).toLocaleDateString()}</td>
             </tr>
           </tbody>
         </table>
 
-        {/* grid */}
-        <div className="grid" style={{ gridTemplateColumns:"26% 74%" , minHeight:"25cm" }}>
-
+        {/* 2-column layout */}
+        <div className="grid" style={{ gridTemplateColumns: "26% 74%", minHeight: "25cm" }}>
           {/* left column */}
           <aside className="relative bg-teal-50/60 p-4 text-sm border-r break-words">
             <h3 className="font-semibold mb-2">Diagnosis…</h3>
-
             {notes?.symptoms && (
               <p className="whitespace-pre-wrap mb-4">{notes.symptoms}</p>
             )}
@@ -89,10 +88,9 @@ function PrescriptionDetailsInner() {
               </>
             )}
 
-            {/* static bottom hints */}
             <div className="absolute bottom-6 left-4 right-4 text-xs space-y-2">
               <div><b>Days:</b> MON, TUE, WED</div>
-              <div><b>Timings:</b> In a huge setup of text that a reader be distracted</div>
+              <div><b>Timings:</b> Please follow the schedule as directed.</div>
             </div>
           </aside>
 
@@ -104,17 +102,17 @@ function PrescriptionDetailsInner() {
 
             <table className="w-full mb-8">
               <tbody>
-                {medicines.map((m,i)=>(
+                {medicines.map((m, i) => (
                   <tr key={i} className="align-top">
-                    <td className="pr-2">{i+1}.</td>
+                    <td className="pr-2">{i + 1}.</td>
                     <td className="pb-2">
                       <strong>{m.name}</strong>
-                      {m.type     && <em> ({m.type})</em>}
+                      {m.type && <em> ({m.type})</em>}
                       {m.strength && <> {m.strength}</>}
-                      <br/>
-                      {m.dosage   && <>Dose: {m.dosage}&ensp;</>}
+                      <br />
+                      {m.dosage && <>Dose: {m.dosage}&ensp;</>}
                       {m.duration && <>• Duration: {m.duration}&ensp;</>}
-                      {m.advice   && <>• {m.advice}</>}
+                      {m.advice && <>• {m.advice}</>}
                     </td>
                   </tr>
                 ))}
@@ -123,23 +121,28 @@ function PrescriptionDetailsInner() {
 
             {notes?.generalAdvice && (
               <p className="text-sm">
-                <b>General Advice:</b> {notes.generalAdvice}
+                <b>General&nbsp;Advice:</b> {notes.generalAdvice}
               </p>
             )}
 
-            {/* signature line */}
+            {/* dotted signature line */}
             <div className="absolute bottom-8 right-6 text-xs w-48 text-right">
               <div className="border-t border-dotted pt-1">Signature</div>
             </div>
           </section>
         </div>
 
-        {/* action bar (hidden in print) */}
+        {/* small auto-generated note */}
+        <p className="text-[10px] text-center text-gray-500 py-2 print:pt-4">
+          This prescription is computer-generated.
+        </p>
+
+        {/* bottom action bar (hidden on paper) */}
         <div className="no-print flex justify-end gap-3 p-4 border-t bg-gray-50">
-          <button onClick={()=>navigate(-1)} className="btn btn-outline btn-sm">
+          <button onClick={() => navigate(-1)} className="btn btn-outline btn-sm">
             <ArrowLeft size={14}/> Back
           </button>
-          <button onClick={()=>window.print()} className="btn btn-primary btn-sm">
+          <button onClick={() => window.print()} className="btn btn-primary btn-sm">
             <Printer size={14}/> Print
           </button>
         </div>
@@ -148,7 +151,5 @@ function PrescriptionDetailsInner() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Export both default + named so router can import either way        */
+/* export */
 export { PrescriptionDetailsInner as PrescriptionDetails };
-export default PrescriptionDetailsInner;

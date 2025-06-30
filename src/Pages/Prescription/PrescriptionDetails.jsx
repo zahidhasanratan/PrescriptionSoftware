@@ -1,112 +1,154 @@
-import React, { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import Swal from "sweetalert2";
-import { ArrowLeft, Printer } from "lucide-react";
+// src/Pages/Prescription/PrescriptionDetails.jsx
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate }     from "react-router-dom";
+import axios                          from "axios";
+import { ArrowLeft, Printer }         from "lucide-react";
 
-/* A4-ish printable container width */
-const pageStyle =
-  "@media print { @page { size: A4 portrait; margin: 14mm } body { -webkit-print-color-adjust: exact } }";
+/* ---------- print stylesheet ---------- */
+const css = `
+@media print {
+  @page  { size:A4 portrait; margin:18mm 14mm 14mm 14mm; }
+  body   { -webkit-print-color-adjust:exact; font-family:"Times New Roman",serif; }
+  .no-print{display:none!important}
+}
+.brand-watermark{
+  position:absolute; inset:0;
+  font-size:6rem; letter-spacing:1rem;
+  color:rgba(0,0,0,.04); font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
+}
+`;
 
-export const PrescriptionDetails = () => {
-  const { id } = useParams();                 // /prescriptions/:id
-  const navigate = useNavigate();
-  const printRef = useRef(null);
+function PrescriptionDetailsInner() {
+  const { id }       = useParams();
+  const navigate     = useNavigate();
+  const [doc, setDoc] = useState(null);
+  const [state, setState] = useState/** `"loading" | "ready" | "error"` */("loading");
 
-  const [prescription, setPrescription] = useState(null);
-  const [loading, setLoading]               = useState(true);
-
-  /* fetch once */
   useEffect(() => {
+    let cancel = false;
     axios
       .get(`http://localhost:5000/api/prescriptions/${id}`)
-      .then((res) => setPrescription(res.data))
-      .catch(() =>
-        Swal.fire("Error", "Failed to load prescription.", "error").then(() =>
-          navigate("/prescriptions")                   // fallback list page
-        )
-      )
-      .finally(() => setLoading(false));
-  }, [id, navigate]);
+      .then(({ data }) => !cancel && (setDoc(data), setState("ready")))
+      .catch((err) => {
+        console.error("Fetch error:", err?.response || err);
+        if (!cancel) setState("error");
+      });
+    return () => { cancel = true };
+  }, [id]);
 
-  const handlePrint = () => window.print();
+  /* ---- UI states ---- */
+  if (state === "loading") return <p className="p-10 text-center">Loading…</p>;
+  if (state === "error")   return (
+    <div className="p-10 text-center space-y-4">
+      <p className="text-red-600">Could not load prescription.</p>
+      <button onClick={() => navigate(-1)} className="btn btn-outline btn-sm">
+        <ArrowLeft size={14}/> Go back
+      </button>
+    </div>
+  );
+  if (!doc) return null;                // should not happen
 
-  if (loading) return <p className="p-8 text-center">Loading…</p>;
-  if (!prescription) return null;
+  const { patient, medicines, notes, createdAt } = doc;
 
-  const { patient, medicines, notes, createdAt } = prescription;
-
+  /* ---- Render printable sheet ---- */
   return (
     <>
-      {/* print css */}
-      <style>{pageStyle}</style>
+      <style>{css}</style>
 
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded p-6 space-y-6"
-           ref={printRef}>
+      <div className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative overflow-hidden">
+        <div className="brand-watermark">BRAND</div>
 
-        {/* header / clinic info */}
-        <header className="text-center border-b pb-4">
-          <h1 className="text-2xl font-bold text-teal-700">Dr. John Doe</h1>
-          <p className="text-sm">MBBS, FCPS (Medicine)</p>
-          <p className="text-sm text-gray-600">123 Main St, City • Phone +880 1XXXXXXXXX</p>
-        </header>
+        {/* top bar */}
+        <table className="w-full text-sm border-b">
+          <tbody>
+            <tr className="divide-x">
+              <td className="p-1"><strong>Name:</strong> {patient?.name || "--"}</td>
+              <td className="p-1 w-24"><strong>Age:</strong> {patient?.age || "--"}</td>
+              <td className="p-1 w-28"><strong>Sex:</strong> {patient?.gender || "--"}</td>
+              <td className="p-1 w-36"><strong>Date:</strong> {new Date(createdAt).toLocaleDateString()}</td>
+            </tr>
+          </tbody>
+        </table>
 
-        {/* patient  */}
-        <section className="flex justify-between text-sm">
-          <div>
-            <p><strong>Name:</strong> {patient.name}</p>
-            {patient.patientId && <p><strong>ID:</strong> {patient.patientId}</p>}
-            {patient.phone &&    <p><strong>Phone:</strong> {patient.phone}</p>}
-          </div>
-          <div className="text-right">
-            {patient.gender && <p><strong>Gender:</strong> {patient.gender}</p>}
-            {patient.age &&     <p><strong>Age:</strong> {patient.age}</p>}
-            <p><strong>Date:</strong> {new Date(createdAt).toLocaleDateString()}</p>
-          </div>
-        </section>
+        {/* grid */}
+        <div className="grid" style={{ gridTemplateColumns:"26% 74%" , minHeight:"25cm" }}>
 
-        {/* Rᵡ – medicines */}
-        <section>
-          <h2 className="font-semibold mb-2">R<span className="align-super text-xs">x</span></h2>
-          <table className="w-full text-sm border-t">
-            <tbody>
-              {medicines.map((m, idx) => (
-                <tr key={idx} className="border-b">
-                  <td className="py-1">
-                    <strong>{idx + 1}. {m.name}</strong>{" "}
-                    {m.type && <em>({m.type})</em>}{" "}
-                    {m.strength && m.strength}
-                  </td>
-                  <td className="py-1">
-                    {m.dosage && <>Dose:&nbsp;{m.dosage}&nbsp;</>}
-                    {m.duration && <>•&nbsp;Duration:&nbsp;{m.duration}&nbsp;</>}
-                    {m.advice && <>•&nbsp;{m.advice}</>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+          {/* left column */}
+          <aside className="relative bg-teal-50/60 p-4 text-sm border-r break-words">
+            <h3 className="font-semibold mb-2">Diagnosis…</h3>
 
-        {/* notes */}
-        {(notes?.symptoms || notes?.tests || notes?.generalAdvice) && (
-          <section className="text-sm space-y-1">
-            {notes.symptoms      && <p><strong>Symptoms:</strong> {notes.symptoms}</p>}
-            {notes.tests         && <p><strong>Tests:</strong> {notes.tests}</p>}
-            {notes.generalAdvice && <p><strong>Advice:</strong> {notes.generalAdvice}</p>}
+            {notes?.symptoms && (
+              <p className="whitespace-pre-wrap mb-4">{notes.symptoms}</p>
+            )}
+            {notes?.tests && (
+              <>
+                <h4 className="font-semibold">Tests to do</h4>
+                <p className="whitespace-pre-wrap mb-4">{notes.tests}</p>
+              </>
+            )}
+
+            {/* static bottom hints */}
+            <div className="absolute bottom-6 left-4 right-4 text-xs space-y-2">
+              <div><b>Days:</b> MON, TUE, WED</div>
+              <div><b>Timings:</b> In a huge setup of text that a reader be distracted</div>
+            </div>
+          </aside>
+
+          {/* right column */}
+          <section className="relative p-6 text-sm">
+            <h2 className="font-bold text-xl mb-4">
+              R<span className="align-super text-xs">x</span>
+            </h2>
+
+            <table className="w-full mb-8">
+              <tbody>
+                {medicines.map((m,i)=>(
+                  <tr key={i} className="align-top">
+                    <td className="pr-2">{i+1}.</td>
+                    <td className="pb-2">
+                      <strong>{m.name}</strong>
+                      {m.type     && <em> ({m.type})</em>}
+                      {m.strength && <> {m.strength}</>}
+                      <br/>
+                      {m.dosage   && <>Dose: {m.dosage}&ensp;</>}
+                      {m.duration && <>• Duration: {m.duration}&ensp;</>}
+                      {m.advice   && <>• {m.advice}</>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {notes?.generalAdvice && (
+              <p className="text-sm">
+                <b>General Advice:</b> {notes.generalAdvice}
+              </p>
+            )}
+
+            {/* signature line */}
+            <div className="absolute bottom-8 right-6 text-xs w-48 text-right">
+              <div className="border-t border-dotted pt-1">Signature</div>
+            </div>
           </section>
-        )}
+        </div>
 
-        {/* footer */}
-        <footer className="border-t pt-4 text-right text-sm text-gray-500 print:hidden">
-          <button className="btn btn-sm btn-outline mr-4" onClick={() => navigate(-1)}>
+        {/* action bar (hidden in print) */}
+        <div className="no-print flex justify-end gap-3 p-4 border-t bg-gray-50">
+          <button onClick={()=>navigate(-1)} className="btn btn-outline btn-sm">
             <ArrowLeft size={14}/> Back
           </button>
-          <button className="btn btn-sm btn-primary" onClick={handlePrint}>
+          <button onClick={()=>window.print()} className="btn btn-primary btn-sm">
             <Printer size={14}/> Print
           </button>
-        </footer>
+        </div>
       </div>
     </>
   );
-};
+}
+
+/* ------------------------------------------------------------------ */
+/* Export both default + named so router can import either way        */
+export { PrescriptionDetailsInner as PrescriptionDetails };
+export default PrescriptionDetailsInner;

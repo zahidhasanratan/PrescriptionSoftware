@@ -306,9 +306,9 @@ export const WritePrescription = () => {
 
       {/* Notes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <textarea className="textarea textarea-bordered" rows={2} placeholder="Symptoms"
+        <textarea className="textarea textarea-bordered" rows={2} placeholder="Complaints"
                   value={notes.symptoms} onChange={e=>setNotes({...notes,symptoms:e.target.value})}/>
-        <textarea className="textarea textarea-bordered" rows={2} placeholder="Tests"
+        <textarea className="textarea textarea-bordered" rows={2} placeholder="Diagnosis"
                   value={notes.tests} onChange={e=>setNotes({...notes,tests:e.target.value})}/>
         <textarea className="textarea textarea-bordered" rows={2} placeholder="Advice"
                   value={notes.generalAdvice} onChange={e=>setNotes({...notes,generalAdvice:e.target.value})}/>

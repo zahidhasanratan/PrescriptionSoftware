@@ -84,7 +84,7 @@ export const WritePrescription = () => {
   const staticDict = {
     type:     ["Tablet", "Capsule", "Injection", "Syrup"],
     strength: ["500mg", "250mg", "1 spoon", "2 spoons", "1/2 spoon"],
-    dosage:   ["1+0+1", "1+1+1", "0+1+0", "1+0+0"],
+    dosage:   ["1+0+1", "1+1+1", "0+1+0", "1+0+0", "0+0+1"],
     advice:   ["Before Meal", "After Meal", "With Water"],
   };
 

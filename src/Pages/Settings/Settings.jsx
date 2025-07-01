@@ -131,5 +131,5 @@ function Settings() {
   );
 }
 
-export { Settings };          // <-- named
-export default Settings;      // <-- default
+export { Settings };          
+export default Settings;      

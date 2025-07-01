@@ -1,61 +1,88 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
-import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  XCircle,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 5;
 
 export const Patient = () => {
   const navigate = useNavigate();
+
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchPatients = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:5000/api/patients");
-      if (!res.ok) throw new Error("Failed to fetch patients");
-      const data = await res.json();
-      data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setPatients(data);
-      setLoading(false);
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-    }
-  };
-
+  /* ─── Fetch all patients once ─── */
   useEffect(() => {
-    fetchPatients();
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/patients");
+        if (!res.ok) throw new Error("Failed to fetch patients");
+        const data = await res.json();
+        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // newest first
+        setPatients(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
+  /* ─── Derive filtered list whenever criteria change ─── */
   useEffect(() => {
-    if (!searchTerm) {
-      setFilteredPatients(patients);
-      setCurrentPage(1);
-      return;
-    }
+    const lower = searchTerm.toLowerCase();
 
-    const lowerTerm = searchTerm.toLowerCase();
-    const filtered = patients.filter((p) =>
-      p.name?.toLowerCase().includes(lowerTerm) ||
-      p.patientId?.toLowerCase().includes(lowerTerm) ||
-      p.phone?.toLowerCase().includes(lowerTerm) ||
-      p.gender?.toLowerCase().includes(lowerTerm) ||
-      p.age?.toString().includes(lowerTerm)
-    );
+    const list = patients.filter((p) => {
+      /* text search */
+      const txt = [
+        p.name,
+        p.patientId,
+        p.phone,
+        p.gender,
+        p.age?.toString(),
+      ]
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = txt.includes(lower);
 
-    setFilteredPatients(filtered);
-    setCurrentPage(1);
-  }, [searchTerm, patients]);
+      /* date-range match (createdAt) */
+      const d = new Date(p.createdAt).setHours(0, 0, 0, 0);
+      const inFrom = dateFrom
+        ? d >= new Date(dateFrom).setHours(0, 0, 0, 0)
+        : true;
+      const inTo = dateTo
+        ? d <= new Date(dateTo).setHours(23, 59, 59, 999)
+        : true;
 
-  const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE);
-  const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const currentPatients = filteredPatients.slice(startIndex, startIndex + PAGE_SIZE);
+      return matchesSearch && inFrom && inTo;
+    });
+
+    setFilteredPatients(list);
+    setCurrentPage(1); // reset to first page on any filter change
+  }, [searchTerm, dateFrom, dateTo, patients]);
+
+  /* ─── Pagination helpers ─── */
+  const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE) || 1;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const current = filteredPatients.slice(start, start + PAGE_SIZE);
+
+  const clearDates = () => {
+    setDateFrom("");
+    setDateTo("");
+  };
 
   const handleDelete = async (patientId) => {
     const result = await Swal.fire({
@@ -65,19 +92,16 @@ export const Patient = () => {
       showCancelButton: true,
       confirmButtonText: "Yes, delete it!",
     });
-
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/patients/${patientId}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(
+        `http://localhost:5000/api/patients/${patientId}`,
+        { method: "DELETE" }
+      );
       if (!res.ok) throw new Error("Failed to delete patient");
 
       setPatients((prev) => prev.filter((p) => p.patientId !== patientId));
-      setFilteredPatients((prev) => prev.filter((p) => p.patientId !== patientId));
-
       Swal.fire("Deleted!", "Patient has been deleted.", "success");
     } catch (err) {
       console.error(err);
@@ -85,15 +109,20 @@ export const Patient = () => {
     }
   };
 
+  /* ---------------------------------------------------------------- */
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-4">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <h2 className="text-3xl font-extrabold text-teal-900">Patients</h2>
-          <span className="text-sm text-gray-500">Total: {patients.length}</span>
+          <span className="text-sm text-gray-500">
+            Total: {filteredPatients.length}
+          </span>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Search box */}
           <div className="relative flex-grow">
             <input
               type="search"
@@ -103,9 +132,13 @@ export const Patient = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               autoComplete="off"
             />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
           </div>
 
+          {/* Add new patient */}
           <button
             onClick={() => navigate("/add-patient")}
             className="btn btn-primary flex items-center gap-2 whitespace-nowrap"
@@ -116,6 +149,39 @@ export const Patient = () => {
         </div>
       </div>
 
+      {/* Date-range filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div>
+          <label className="block font-medium mb-1">From</label>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="input input-bordered w-full"
+          />
+        </div>
+        <div>
+          <label className="block font-medium mb-1">To</label>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="input input-bordered w-full"
+          />
+        </div>
+        {(dateFrom || dateTo) && (
+          <div className="flex items-end">
+            <button
+              onClick={clearDates}
+              className="btn btn-xs btn-ghost flex items-center gap-1"
+            >
+              <XCircle size={14} /> Clear dates
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Table / loaders */}
       <div className="overflow-x-auto bg-white rounded-xl shadow-lg border border-gray-200">
         {loading ? (
           <p className="p-8 text-center text-gray-500">Loading patients...</p>
@@ -127,22 +193,24 @@ export const Patient = () => {
           <table className="table table-zebra w-full text-sm">
             <thead className="bg-teal-100 text-teal-900">
               <tr>
-                <th>Patient ID</th>
+                <th>Patient&nbsp;ID</th>
                 <th>Name</th>
                 <th>Age</th>
                 <th>Gender</th>
                 <th>Phone</th>
+                <th>Created</th>
                 <th className="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {currentPatients.map((p) => (
+              {current.map((p) => (
                 <tr key={p._id}>
                   <td className="font-mono">{p.patientId}</td>
                   <td className="font-medium">{p.name}</td>
                   <td>{p.age}</td>
                   <td>{p.gender}</td>
                   <td>{p.phone}</td>
+                  <td>{new Date(p.createdAt).toLocaleDateString()}</td>
                   <td className="flex justify-center gap-2">
                     <button
                       className="btn btn-xs btn-info btn-outline"
@@ -170,6 +238,7 @@ export const Patient = () => {
         )}
       </div>
 
+      {/* Pagination */}
       {filteredPatients.length > PAGE_SIZE && (
         <div className="flex justify-center items-center gap-4 mt-4">
           <button

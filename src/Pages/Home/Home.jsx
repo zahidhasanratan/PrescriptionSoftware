@@ -33,7 +33,7 @@ export const Home = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Link
-          to="/patients/new"
+          to="/add-patient"
           className="bg-teal-500 hover:bg-teal-600 text-white p-5 rounded-lg flex items-center gap-4 transition"
         >
           <UserPlus />

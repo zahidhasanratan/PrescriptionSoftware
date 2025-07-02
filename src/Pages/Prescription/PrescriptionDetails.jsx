@@ -1,47 +1,57 @@
-// src/Pages/Prescription/PrescriptionDetails.jsx
+// ── src/Pages/Prescription/PrescriptionDetails.jsx ──────────────────────────
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate }     from "react-router-dom";
 import axios                          from "axios";
 import { ArrowLeft, Printer }         from "lucide-react";
 
-/* ---------- print stylesheet ---------- */
+/* ═══════════  print-only css  ═══════════ */
 const css = `
 @media print {
-  @page  { size:A4 portrait; margin:18mm 14mm 14mm 14mm; }
-  body   { -webkit-print-color-adjust:exact; font-family:"Times New Roman",serif; }
-  .no-print{display:none!important}
-}
-.brand-watermark{
-  position:absolute; inset:0;
-  font-size:6rem; letter-spacing:1rem;
-  color:rgba(0,0,0,.04); font-weight:700;
-  display:flex; align-items:center; justify-content:center;
-  pointer-events:none;
+  @page  { size:A4 portrait; margin:18mm 14mm 14mm 14mm }
+  body   { -webkit-print-color-adjust:exact; font-family:"Times New Roman",serif }
+
+  body *           { visibility:hidden !important }
+  #print-sheet,
+  #print-sheet *   { visibility:visible !important }
+  #print-sheet     { position:absolute; inset:0; width:100% }
+
+  .no-print        { display:none !important }
 }
 `;
 
-function PrescriptionDetailsInner() {
+export function PrescriptionDetails() {
   const { id }   = useParams();
   const navigate = useNavigate();
-  const [doc,   setDoc]   = useState(null);
-  const [state, setState] = useState("loading"); // "loading" | "ready" | "error"
 
-  /* fetch once */
+  const [rx, setRx] = useState(null);      // prescription doc
+  const [st, setSt] = useState({});        // doctor settings
+  const [ui, setUi] = useState("loading"); // loading | ready | error
+
+  /* ── fetch once ─────────────────────────────────────────── */
   useEffect(() => {
     let cancel = false;
-    axios
-      .get(`http://localhost:5000/api/prescriptions/${id}`)
-      .then(({ data }) => !cancel && (setDoc(data), setState("ready")))
-      .catch(err => {
-        console.error("Fetch error:", err?.response || err);
-        !cancel && setState("error");
-      });
+    (async () => {
+      try {
+        const [rxRes, stRes] = await Promise.all([
+          axios.get(`http://localhost:5000/api/prescriptions/${id}`),
+          axios.get("http://localhost:5000/api/settings")
+        ]);
+        if (!cancel) {
+          setRx(rxRes.data);
+          setSt(stRes.data || {});
+          setUi("ready");
+        }
+      } catch (e) {
+        console.error(e);
+        !cancel && setUi("error");
+      }
+    })();
     return () => { cancel = true; };
   }, [id]);
 
-  /* fallback states */
-  if (state === "loading") return <p className="p-10 text-center">Loading…</p>;
-  if (state === "error")   return (
+  /* ── guards ─────────────────────────────────────────────── */
+  if (ui === "loading") return <p className="p-10 text-center">Loading…</p>;
+  if (ui === "error")   return (
     <div className="p-10 text-center space-y-4">
       <p className="text-red-600">Could not load prescription.</p>
       <button onClick={() => navigate(-1)} className="btn btn-outline btn-sm">
@@ -49,107 +59,135 @@ function PrescriptionDetailsInner() {
       </button>
     </div>
   );
-  if (!doc) return null;
+  if (!rx) return null;
 
-  const { patient, medicines, notes, createdAt } = doc;
+  const { patient, medicines, notes, createdAt } = rx;
 
-  /* ---------------- render sheet ---------------- */
+  const dash  = v => v || "—";
+  const nl2br = v => v?.split("\n").map((l,i)=><span key={i}>{l}<br/></span>);
+
+  /* ── SHEET ──────────────────────────────────────────────── */
   return (
     <>
       <style>{css}</style>
 
-      <div className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative overflow-hidden">
-        {/* optional <div className="brand-watermark">BRAND</div> */}
+      <div
+        id="print-sheet"
+        className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative flex flex-col"
+        style={{ minHeight: "26.3cm" }}                /* exact printable height */
+      >
+        {/* ═══════ Letter-head ═══════ */}
+        <header className="border-b pb-3 mb-4 flex items-start gap-4">
+          <div className="flex-1">
+            <h1 className="font-extrabold text-xl md:text-2xl text-teal-800 leading-snug">
+              {dash(st.name)}
+            </h1>
+            <p className="text-sm md:text-base font-medium text-gray-700">
+              {dash(st.specialization)}
+            </p>
+            <p className="text-sm text-gray-600 whitespace-pre-wrap">
+              {nl2br(st.designation)}
+            </p>
+          </div>
 
-        {/* header bar */}
-        <table className="w-full text-sm border-b">
+          <div className="text-right text-xs md:text-sm text-gray-700 leading-snug">
+            <p>
+              <b>Chamber:</b><br/>
+              {dash(st.clinicName)}<br/>
+              {nl2br(st.clinicAddress)}
+            </p>
+            {st.phone && <p className="mt-1"><b>Phone:</b> {st.phone}</p>}
+          </div>
+        </header>
+
+        {/* ═══════ Patient strip ═══════ */}
+        <table className="w-full text-sm border-b mb-4">
           <tbody>
             <tr className="divide-x">
-              <td className="p-1"><strong>Name:</strong> {patient?.name || "—"}</td>
-              <td className="p-1 w-24"><strong>Age:</strong> {patient?.age || "—"}</td>
-              <td className="p-1 w-28"><strong>Sex:</strong> {patient?.gender || "—"}</td>
-              <td className="p-1 w-36"><strong>Date:</strong> {new Date(createdAt).toLocaleDateString()}</td>
+              <td className="p-1"><b>Name:</b> {dash(patient?.name)}</td>
+              <td className="p-1 w-24"><b>Age:</b> {dash(patient?.age)}</td>
+              <td className="p-1 w-28"><b>Sex:</b> {dash(patient?.gender)}</td>
+              <td className="p-1 w-40"><b>Date:</b> {new Date(createdAt).toLocaleDateString()}</td>
             </tr>
           </tbody>
         </table>
 
-        {/* 2-column layout */}
-        <div className="grid" style={{ gridTemplateColumns: "26% 74%", minHeight: "25cm" }}>
-          {/* left column */}
-          <aside className="relative bg-teal-50/60 p-4 text-sm border-r break-words">
-            <h3 className="font-semibold mb-2">Diagnosis…</h3>
-            {notes?.symptoms && (
-              <p className="whitespace-pre-wrap mb-4">{notes.symptoms}</p>
-            )}
-            {notes?.tests && (
-              <>
-                <h4 className="font-semibold">Tests to do</h4>
-                <p className="whitespace-pre-wrap mb-4">{notes.tests}</p>
-              </>
-            )}
+        {/* ========= Main body (flex-grow) ========= */}
+        <div className="flex-grow">
+          <div className="grid" style={{ gridTemplateColumns:"26% 74%" }}>
+            {/* left column */}
+            <aside className="relative bg-teal-50/60 p-4 text-sm border-r break-words">
+              <h3 className="font-semibold mb-2">Diagnosis…</h3>
+              {notes?.symptoms && <p className="whitespace-pre-wrap mb-4">{notes.symptoms}</p>}
+              {notes?.tests && (
+                <>
+                  <h4 className="font-semibold">Tests to do</h4>
+                  <p className="whitespace-pre-wrap mb-4">{notes.tests}</p>
+                </>
+              )}
+            </aside>
 
-            <div className="absolute bottom-6 left-4 right-4 text-xs space-y-2">
-              <div><b>Days:</b> MON, TUE, WED</div>
-              <div><b>Timings:</b> Please follow the schedule as directed.</div>
-            </div>
-          </aside>
+            {/* right column */}
+            <section className="relative p-6 text-sm">
+              <h2 className="font-bold text-xl mb-4">
+                R<span className="align-super text-xs">x</span>
+              </h2>
 
-          {/* right column */}
-          <section className="relative p-6 text-sm">
-            <h2 className="font-bold text-xl mb-4">
-              R<span className="align-super text-xs">x</span>
-            </h2>
+              <table className="w-full mb-8">
+                <tbody>
+                  {medicines.map((m,i)=>(
+                    <tr key={i} className="align-top">
+                      <td className="pr-2">{i+1}.</td>
+                      <td className="pb-2">
+                        <strong>{m.name}</strong>
+                        {m.type     && <em> ({m.type})</em>}
+                        {m.strength && <> {m.strength}</>}
+                        <br/>
+                        {m.dosage   && <>Dose: {m.dosage}&ensp;</>}
+                        {m.duration && <>• Duration: {m.duration}&ensp;</>}
+                        {m.advice   && <>• {m.advice}</>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-            <table className="w-full mb-8">
-              <tbody>
-                {medicines.map((m, i) => (
-                  <tr key={i} className="align-top">
-                    <td className="pr-2">{i + 1}.</td>
-                    <td className="pb-2">
-                      <strong>{m.name}</strong>
-                      {m.type && <em> ({m.type})</em>}
-                      {m.strength && <> {m.strength}</>}
-                      <br />
-                      {m.dosage && <>Dose: {m.dosage}&ensp;</>}
-                      {m.duration && <>• Duration: {m.duration}&ensp;</>}
-                      {m.advice && <>• {m.advice}</>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {notes?.generalAdvice && (
-              <p className="text-sm">
-                <b>General&nbsp;Advice:</b> {notes.generalAdvice}
-              </p>
-            )}
-
-            {/* dotted signature line */}
-            <div className="absolute bottom-8 right-6 text-xs w-48 text-right">
-              <div className="border-t border-dotted pt-1">Signature</div>
-            </div>
-          </section>
+              {notes?.generalAdvice && (
+                <p className="text-sm"><b>General&nbsp;Advice:</b> {notes.generalAdvice}</p>
+              )}
+            </section>
+          </div>
         </div>
 
-        {/* small auto-generated note */}
-        <p className="text-[10px] text-center text-gray-500 py-2 print:pt-4">
+        {/* ═══════ Footer (always bottom) ═══════ */}
+        <footer className="border-t pt-2 mt-2 text-xs flex justify-between items-end">
+          {/* days / timing */}
+          <div className="whitespace-pre-line leading-snug">
+            <b>Days:</b> {dash(st.daysText)}{"\n"}
+            <b>Timings:</b> {dash(st.timingText)}
+          </div>
+
+          {/* signature */}
+          <div className="text-right" style={{ width:"160px" }}>
+            <div className="border-t border-dotted pt-1">Signature</div>
+          </div>
+        </footer>
+
+        {/* tiny note */}
+        <p className="text-[10px] text-center text-gray-500 py-2">
           This prescription is computer-generated.
         </p>
+      </div>
 
-        {/* bottom action bar (hidden on paper) */}
-        <div className="no-print flex justify-end gap-3 p-4 border-t bg-gray-50">
-          <button onClick={() => navigate(-1)} className="btn btn-outline btn-sm">
-            <ArrowLeft size={14}/> Back
-          </button>
-          <button onClick={() => window.print()} className="btn btn-primary btn-sm">
-            <Printer size={14}/> Print
-          </button>
-        </div>
+      {/* action bar (screen-only) */}
+      <div className="no-print flex justify-end gap-3 p-4 max-w-4xl mx-auto">
+        <button onClick={()=>navigate(-1)} className="btn btn-outline btn-sm">
+          <ArrowLeft size={14}/> Back
+        </button>
+        <button onClick={()=>window.print()} className="btn btn-primary btn-sm">
+          <Printer size={14}/> Print
+        </button>
       </div>
     </>
   );
 }
-
-/* export */
-export { PrescriptionDetailsInner as PrescriptionDetails };

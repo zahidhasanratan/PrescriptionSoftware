@@ -1,3 +1,4 @@
+// src/Pages/Patients/Patient.jsx
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import {
@@ -6,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   XCircle,
+  PenSquare,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +25,6 @@ export const Patient = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /* ─── Fetch all patients once ─── */
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -31,7 +32,7 @@ export const Patient = () => {
         const res = await fetch("http://localhost:5000/api/patients");
         if (!res.ok) throw new Error("Failed to fetch patients");
         const data = await res.json();
-        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // newest first
+        data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setPatients(data);
       } catch (err) {
         setError(err.message);
@@ -41,24 +42,14 @@ export const Patient = () => {
     })();
   }, []);
 
-  /* ─── Derive filtered list whenever criteria change ─── */
   useEffect(() => {
     const lower = searchTerm.toLowerCase();
-
     const list = patients.filter((p) => {
-      /* text search */
-      const txt = [
-        p.name,
-        p.patientId,
-        p.phone,
-        p.gender,
-        p.age?.toString(),
-      ]
+      const txt = [p.name, p.patientId, p.phone, p.gender, p.age?.toString()]
         .join(" ")
         .toLowerCase();
       const matchesSearch = txt.includes(lower);
 
-      /* date-range match (createdAt) */
       const d = new Date(p.createdAt).setHours(0, 0, 0, 0);
       const inFrom = dateFrom
         ? d >= new Date(dateFrom).setHours(0, 0, 0, 0)
@@ -71,10 +62,9 @@ export const Patient = () => {
     });
 
     setFilteredPatients(list);
-    setCurrentPage(1); // reset to first page on any filter change
+    setCurrentPage(1);
   }, [searchTerm, dateFrom, dateTo, patients]);
 
-  /* ─── Pagination helpers ─── */
   const totalPages = Math.ceil(filteredPatients.length / PAGE_SIZE) || 1;
   const start = (currentPage - 1) * PAGE_SIZE;
   const current = filteredPatients.slice(start, start + PAGE_SIZE);
@@ -109,7 +99,6 @@ export const Patient = () => {
     }
   };
 
-  /* ---------------------------------------------------------------- */
   return (
     <div className="space-y-6 max-w-6xl mx-auto p-4">
       {/* Header */}
@@ -122,7 +111,6 @@ export const Patient = () => {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Search box */}
           <div className="relative flex-grow">
             <input
               type="search"
@@ -138,7 +126,6 @@ export const Patient = () => {
             />
           </div>
 
-          {/* Add new patient */}
           <button
             onClick={() => navigate("/add-patient")}
             className="btn btn-primary flex items-center gap-2 whitespace-nowrap"
@@ -149,7 +136,7 @@ export const Patient = () => {
         </div>
       </div>
 
-      {/* Date-range filters */}
+      {/* Date Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
         <div>
           <label className="block font-medium mb-1">From</label>
@@ -181,7 +168,7 @@ export const Patient = () => {
         )}
       </div>
 
-      {/* Table / loaders */}
+      {/* Table */}
       <div className="overflow-x-auto bg-white rounded-xl shadow-lg border border-gray-200">
         {loading ? (
           <p className="p-8 text-center text-gray-500">Loading patients...</p>
@@ -213,10 +200,15 @@ export const Patient = () => {
                   <td>{new Date(p.createdAt).toLocaleDateString()}</td>
                   <td className="flex justify-center gap-2">
                     <button
-                      className="btn btn-xs btn-info btn-outline"
-                      onClick={() => navigate(`/patient/${p.patientId}`)}
+                      className="btn btn-xs btn-success btn-outline flex items-center gap-1"
+                      onClick={() =>
+                        navigate("/prescriptions/write", {
+                          state: { patientId: p.patientId },
+                        })
+                      }
                     >
-                      View
+                      <PenSquare size={14} />
+                      Write Rx
                     </button>
                     <button
                       className="btn btn-xs btn-warning btn-outline"

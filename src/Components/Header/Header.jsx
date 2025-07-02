@@ -44,7 +44,7 @@ export const Header = ({ onMenuClick, onLogout, user }) => {
       </button>
 
       {/* App title */}
-      <h1 className="text-xl font-bold text-teal-900">Smart Prescription App</h1>
+      <h1 className="text-xl font-bold text-teal-900">Smart Prescription</h1>
 
       {/* Profile section with dropdown */}
       <div

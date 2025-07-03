@@ -1,61 +1,65 @@
+// ── src/Pages/Auth/Register.jsx ─────────────────────────────────────────────
 import React, { useState, useContext } from "react";
 import { Zoom } from "react-awesome-reveal";
 import { FcGoogle } from "react-icons/fc";
-import { AuthContext } from "../../Provider/AuthProvider";
+import { AuthContext, ALLOWED_EMAILS } from "../../Provider/AuthProvider";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { updateProfile } from "firebase/auth";
 
+const normalize = (s = "") => s.trim().toLowerCase();
+
 export const Register = () => {
-  const { createUser, signInWithGoogle, setUser } = useContext(AuthContext);
+  const { createUser, signInWithGoogle, logout, user: firebaseUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     photoURL: "",
     password: "",
   });
-
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) =>
+    setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const validatePassword = (password) => {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/;
-    return regex.test(password);
-  };
+  const validatePassword = (pw) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}$/.test(pw);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     const { name, email, photoURL, password } = formData;
 
+    // ── allow-list guard ───────────────────────────
+    if (!ALLOWED_EMAILS.some((allowed) => normalize(allowed) === normalize(email))) {
+      return Swal.fire({
+        icon: "error",
+        title: "Not Authorized",
+        text: "This email is not allowed to register.",
+        confirmButtonColor: "#14b8a6",
+      });
+    }
+
     if (!validatePassword(password)) {
-      Swal.fire({
+      return Swal.fire({
         icon: "error",
         title: "Invalid Password",
         text:
           "Password must be at least 8 characters and include uppercase, lowercase, and a special character.",
-        confirmButtonColor: "#14b8a6", // teal-500
+        confirmButtonColor: "#14b8a6",
       });
-      return;
     }
 
     try {
       const result = await createUser(email, password);
       await updateProfile(result.user, { displayName: name, photoURL });
-      setUser(result.user);
-
+      // no need to manually setUser here—onAuthStateChanged will fire
       Swal.fire({
         icon: "success",
         title: "Registration Successful",
         showConfirmButton: false,
         timer: 1500,
       });
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1600);
+      setTimeout(() => navigate("/"), 1600);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -69,18 +73,14 @@ export const Register = () => {
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithGoogle();
-      setUser(result.user);
-
+      // onAuthStateChanged will kick out any non-allowlisted user automatically
       Swal.fire({
         icon: "success",
         title: "Signed in with Google!",
         showConfirmButton: false,
         timer: 1500,
       });
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1600);
+      setTimeout(() => navigate("/"), 1600);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -96,13 +96,15 @@ export const Register = () => {
       <Zoom triggerOnce>
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
           <h2 className="text-3xl font-bold text-teal-700 mb-6 text-center">
-            Register for Garden Hub
+            Register
           </h2>
 
           <form onSubmit={handleRegister} className="space-y-5">
             {["name", "email", "photoURL", "password"].map((field) => (
               <div key={field}>
-                <label className="block text-sm font-semibold text-teal-700 mb-1 capitalize">
+                <label
+                  className="block text-sm font-semibold text-teal-700 mb-1 capitalize"
+                >
                   {field === "photoURL" ? "Photo URL" : field}
                 </label>
                 <input

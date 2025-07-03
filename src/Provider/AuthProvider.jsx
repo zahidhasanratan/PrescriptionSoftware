@@ -18,27 +18,29 @@ export const AuthContext = createContext();
 const auth           = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-/* ─── 1.  Allow-listed addresses (add / remove as you like) ──────────────── */
-const ALLOWED_EMAILS = [
+/* ─── 1.  Allow-listed addresses (add / remove as you like) ───────────────── */
+export const ALLOWED_EMAILS = [
   "zhdhsn6@gmail.com",
-  "zahid@zahid.com",
+  "zahidweb1224@gmail.com",
+  "zahidweb1224@gmail.com",
+  "mavrick.utpal@gmail.com",
 ];
 
 /* small util: compare e-mails in a case- & space-insensitive way */
-const norm = (s = "") => s.trim().toLowerCase();
+const normalize = (s = "") => s.trim().toLowerCase();
 const isAllowed = (firebaseUser) =>
-  firebaseUser && ALLOWED_EMAILS.some((e) => norm(e) === norm(firebaseUser.email));
+  firebaseUser && ALLOWED_EMAILS.some((e) => normalize(e) === normalize(firebaseUser.email));
 
 /* ─── Provider component ─────────────────────────────────────────────────── */
 export const AuthProvider = ({ children }) => {
   const [user,    setUser]    = useState(null);
   const [loading, setLoading] = useState(true);
 
-  /* sign-in / sign-up helpers (unchanged) */
+  /* sign-in / sign-up helpers */
   const createUser       = (email, password) => createUserWithEmailAndPassword(auth, email, password);
   const signIn           = (email, password) => signInWithEmailAndPassword(auth, email, password);
-  const signInWithGoogle = ()                      => signInWithPopup(auth, googleProvider);
-  const logout           = ()                      => signOut(auth);
+  const signInWithGoogle = ()                   => signInWithPopup(auth, googleProvider);
+  const logout           = ()                   => signOut(auth);
 
   /* listen to every auth state change */
   useEffect(() => {
@@ -55,14 +57,12 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     });
-
     return unsubscribe;                           // cleanup listener
   }, []);
 
   /* what consumers of AuthContext will see */
   const authData = {
     user,
-    setUser,                // keep exposed for components that already use it
     loading,
     createUser,
     signIn,

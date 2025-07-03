@@ -109,7 +109,7 @@ function Reports() {
   /* fetch patients once */
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/patients")
+      .get("https://prescription-ebon.vercel.app/api/patients")
       .then(({ data }) => setPatients(data))
       .catch(() => Swal.fire("Error", "Failed to load patients", "error"));
   }, []);
@@ -119,7 +119,7 @@ function Reports() {
     if (!selectedPatient) return setReports([]);
     setLoading(true);
     axios
-      .get("http://localhost:5000/api/reports", {
+      .get("https://prescription-ebon.vercel.app/api/reports", {
         params: { patientId: selectedPatient.patientId },
       })
       .then(({ data }) =>
@@ -175,7 +175,7 @@ function Reports() {
           reportDate: item.reportDate,
         };
         const { data } = await axios.post(
-          "http://localhost:5000/api/reports",
+          "https://prescription-ebon.vercel.app/api/reports",
           payload
         );
         setReports((r) =>
@@ -203,7 +203,7 @@ function Reports() {
       showCancelButton: true,
     });
     if (!res.isConfirmed) return;
-    await axios.delete(`http://localhost:5000/api/reports/${id}`);
+    await axios.delete(`https://prescription-ebon.vercel.app/api/reports/${id}`);
     setReports((r) => r.filter((rep) => rep._id !== id));
     Swal.fire("Deleted", "", "success");
   };

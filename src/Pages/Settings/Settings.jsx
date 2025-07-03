@@ -18,7 +18,7 @@ function Settings() {
 
   /* fetch once */
   useEffect(() => {
-    axios.get("http://localhost:5000/api/settings")
+    axios.get("https://prescription-ebon.vercel.app/api/settings")
       .then(({data}) => setForm(f=>({ ...f, ...data })))
       .catch(() => {/* first run – no doc yet */})
       .finally(() => setLoad(false));
@@ -30,7 +30,7 @@ function Settings() {
   /* ---------------- SAVE profile ---------------- */
   const saveProfile = async () => {
     try {
-      await axios.put("http://localhost:5000/api/settings", form);
+      await axios.put("https://prescription-ebon.vercel.app/api/settings", form);
       Swal.fire("Saved!", "Settings updated.", "success");
     } catch (err) {
       console.error(err);
@@ -44,7 +44,7 @@ function Settings() {
       return Swal.fire("Mismatch", "New passwords do not match", "warning");
     }
     try {
-      await axios.put("http://localhost:5000/api/settings/password", {
+      await axios.put("https://prescription-ebon.vercel.app/api/settings/password", {
         current: pass.current, next: pass.next
       });
       Swal.fire("Done", "Password changed", "success");

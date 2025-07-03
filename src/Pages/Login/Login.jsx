@@ -3,10 +3,10 @@ import { FaGoogle } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Zoom } from "react-awesome-reveal";
 import Swal from "sweetalert2";
-import { AuthContext } from "../../Provider/AuthProvider";
+import { AuthContext } from "../../Provider/AuthProvider"; // ✅ corrected import path
 
 export const Login = () => {
-  const { signIn, signInWithGoogle, setUser } = useContext(AuthContext);
+  const { signIn, signInWithGoogle } = useContext(AuthContext); // ❌ removed setUser
   const [formData, setFormData] = useState({ email: "", password: "" });
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,8 +22,7 @@ export const Login = () => {
     const { email, password } = formData;
 
     try {
-      const result = await signIn(email.trim(), password);
-      setUser(result.user);
+      await signIn(email.trim(), password);
 
       Swal.fire({
         icon: "success",
@@ -40,34 +39,25 @@ export const Login = () => {
         icon: "error",
         title: "Login Failed",
         text: error.message,
-        confirmButtonColor: "#14b8a6", // teal-500
+        confirmButtonColor: "#14b8a6",
       });
     }
   };
 
   const handleGoogleLogin = async () => {
-    try {
-      const result = await signInWithGoogle();
-      setUser(result.user);
+    const result = await signInWithGoogle();
+    if (!result) return;
 
-      Swal.fire({
-        icon: "success",
-        title: "Signed in with Google!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
+    Swal.fire({
+      icon: "success",
+      title: "Signed in with Google!",
+      showConfirmButton: false,
+      timer: 1500,
+    });
 
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 1600);
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Google Sign-In Failed",
-        text: error.message,
-        confirmButtonColor: "#14b8a6",
-      });
-    }
+    setTimeout(() => {
+      navigate(from, { replace: true });
+    }, 1600);
   };
 
   return (

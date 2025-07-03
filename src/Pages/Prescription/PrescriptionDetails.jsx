@@ -33,8 +33,8 @@ export function PrescriptionDetails() {
     (async () => {
       try {
         const [rxRes, stRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/prescriptions/${id}`),
-          axios.get("http://localhost:5000/api/settings")
+          axios.get(`https://prescription-ebon.vercel.app/api/prescriptions/${id}`),
+          axios.get("https://prescription-ebon.vercel.app/api/settings")
         ]);
         if (!cancel) {
           setRx(rxRes.data);

@@ -29,7 +29,7 @@ export const Patient = () => {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/api/patients");
+        const res = await fetch("https://prescription-ebon.vercel.app/api/patients");
         if (!res.ok) throw new Error("Failed to fetch patients");
         const data = await res.json();
         data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -86,7 +86,7 @@ export const Patient = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/patients/${patientId}`,
+        `https://prescription-ebon.vercel.app/api/patients/${patientId}`,
         { method: "DELETE" }
       );
       if (!res.ok) throw new Error("Failed to delete patient");

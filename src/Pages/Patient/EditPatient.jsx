@@ -18,7 +18,7 @@ export const EditPatient = () => {
   useEffect(() => {
     const fetchPatient = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/patients");
+        const res = await fetch("https://prescription-ebon.vercel.app/api/patients");
         if (!res.ok) throw new Error("Failed to fetch patient data");
         const data = await res.json();
 
@@ -55,7 +55,7 @@ export const EditPatient = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/patients/${patientId}`, {
+      const res = await fetch(`https://prescription-ebon.vercel.app/api/patients/${patientId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, age: parseInt(formData.age) }),

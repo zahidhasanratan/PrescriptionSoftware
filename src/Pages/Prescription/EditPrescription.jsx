@@ -31,8 +31,8 @@ export default function EditPrescription() {
   /* ------------ load doc + master data ------------ */
   useEffect(() => {
     Promise.all([
-      axios.get(`http://localhost:5000/api/prescriptions/${id}`),
-      axios.get("http://localhost:5000/api/medicines"),
+      axios.get(`https://prescription-ebon.vercel.app/api/prescriptions/${id}`),
+      axios.get("https://prescription-ebon.vercel.app/api/medicines"),
     ])
     .then(([pDoc, medRes]) => {
       const d = pDoc.data;
@@ -112,7 +112,7 @@ export default function EditPrescription() {
   const update = async()=>{
     if(!meds.length) return Swal.fire("Missing","Add at least one medicine","warning");
     try{
-      await axios.put(`http://localhost:5000/api/prescriptions/${id}`,{
+      await axios.put(`https://prescription-ebon.vercel.app/api/prescriptions/${id}`,{
         patient, medicines:meds, notes
       });
       await Swal.fire("Updated","Prescription updated","success");

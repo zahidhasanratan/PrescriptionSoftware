@@ -39,9 +39,9 @@ export const Home = () => {
     const fetchStats = async () => {
       try {
         const [patientsRes, prescriptionsRes, medicinesRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/patients"),
-          axios.get("http://localhost:5000/api/prescriptions"),
-          axios.get("http://localhost:5000/api/medicines"),
+          axios.get("https://prescription-ebon.vercel.app/api/patients"),
+          axios.get("https://prescription-ebon.vercel.app/api/prescriptions"),
+          axios.get("https://prescription-ebon.vercel.app/api/medicines"),
         ]);
 
         const prescriptions = prescriptionsRes.data;

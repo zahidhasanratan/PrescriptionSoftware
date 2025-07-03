@@ -31,7 +31,7 @@ export default function PrescriptionList() {
   /* ─── Fetch once ─── */
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/prescriptions")
+      .get("https://prescription-ebon.vercel.app/api/prescriptions")
       .then(({ data }) => setPres(data.reverse())) // newest first
       .catch((e) => {
         console.error(e);

@@ -44,11 +44,11 @@ export const WritePrescription = () => {
      Load patients & medicines once
   ============================================================= */
   useEffect(() => {
-    axios.get("http://localhost:5000/api/patients")
+    axios.get("https://prescription-ebon.vercel.app/api/patients")
          .then(r=>setPatients(r.data))
          .catch(()=>Swal.fire("Error","Failed to load patients","error"));
 
-    axios.get("http://localhost:5000/api/medicines")
+    axios.get("https://prescription-ebon.vercel.app/api/medicines")
          .then(r=>setAllMedicines(r.data))
          .catch(()=>Swal.fire("Error","Failed to load medicines","error"));
   }, []);
@@ -68,7 +68,7 @@ export const WritePrescription = () => {
   ============================================================= */
   useEffect(() => {
     if (!selectedPatient) { setDbReports([]); return; }
-    axios.get("http://localhost:5000/api/reports", {
+    axios.get("https://prescription-ebon.vercel.app/api/reports", {
       params:{ patientId:selectedPatient.patientId }
     })
     .then(({data})=> setDbReports(
@@ -108,7 +108,7 @@ export const WritePrescription = () => {
 
     try{
       const payload = { ...patientForm, patientId:Date.now().toString() };
-      const { data } = await axios.post("http://localhost:5000/api/patients",payload);
+      const { data } = await axios.post("https://prescription-ebon.vercel.app/api/patients",payload);
       setPatients(p=>[...p,data]);
       setSelectedPatient(data);
       Swal.fire("Success","Patient added","success");
@@ -240,7 +240,7 @@ export const WritePrescription = () => {
     };
 
     try{
-      const { data } = await axios.post("http://localhost:5000/api/prescriptions",payload);
+      const { data } = await axios.post("https://prescription-ebon.vercel.app/api/prescriptions",payload);
       await Swal.fire("Saved","Prescription saved!","success");
       navigate(`/prescriptions/${data._id}`);
     }catch(err){

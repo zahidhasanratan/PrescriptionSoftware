@@ -105,8 +105,8 @@ export const PrescriptionHistory = () => {
     (async () => {
       try {
         const [pRes, rxRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/patients"),
-          axios.get("http://localhost:5000/api/prescriptions"),
+          axios.get("https://prescription-ebon.vercel.app/api/patients"),
+          axios.get("https://prescription-ebon.vercel.app/api/prescriptions"),
         ]);
         setPatients(pRes.data);
         setPrescriptions(rxRes.data);

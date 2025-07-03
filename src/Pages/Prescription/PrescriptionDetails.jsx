@@ -32,7 +32,7 @@ const css = `
   }
 
   .vertical-line {
-    border-right: 2px solid #ccc !important;
+    border-right: 2px solid #999 !important;
   }
 }
 `;
@@ -88,13 +88,16 @@ export function PrescriptionDetails() {
       <div
         id="print-sheet"
         className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative flex flex-col"
-        style={{ minHeight: "25.6cm", fontFamily: "Times New Roman, serif" }}
+        style={{
+          minHeight: "25.6cm",
+          fontFamily: "'Inter', 'Segoe UI', 'Roboto', sans-serif"
+        }}
       >
-        {/* ========== Header ========== */}
+        {/* Header */}
         <header className="pb-3 mb-2 px-6 pt-4">
           <div className="flex justify-between gap-6">
             <div>
-              <h1 className="text-2xl font-extrabold text-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {dash(st.name)}
               </h1>
               <p className="text-sm font-medium">{dash(st.specialization)}</p>
@@ -107,7 +110,7 @@ export function PrescriptionDetails() {
           </div>
         </header>
 
-        {/* ========== Patient Info ========== */}
+        {/* Patient Info */}
         <div className="text-sm border-t border-b border-dashed border-gray-500 px-6 py-1 mb-2">
           <div className="grid grid-cols-4 gap-2">
             <div><b>Name:</b> {dash(patient?.name)}</div>
@@ -117,9 +120,9 @@ export function PrescriptionDetails() {
           </div>
         </div>
 
-        {/* ========== Body ========== */}
+        {/* Main Content */}
         <div className="flex-grow flex px-6">
-          {/* Diagnosis Section */}
+          {/* Diagnosis */}
           <aside className="w-1/3 pr-4 text-sm vertical-line">
             <h3 className="font-semibold mb-2">Diagnosis</h3>
             {notes?.symptoms && (
@@ -133,7 +136,7 @@ export function PrescriptionDetails() {
             )}
           </aside>
 
-          {/* Medicines Section */}
+          {/* Medicines */}
           <section className="w-2/3 pl-6 text-sm flex flex-col justify-between">
             <div>
               <h2 className="font-bold text-xl mb-4">
@@ -156,7 +159,7 @@ export function PrescriptionDetails() {
               )}
             </div>
 
-            {/* Signature inside Rx section */}
+            {/* Signature */}
             <div className="text-right mt-12 pr-4" style={{ width: "100%" }}>
               <div className="border-t border-dotted border-gray-600 pt-1 w-40 float-right">
                 Signature
@@ -165,7 +168,7 @@ export function PrescriptionDetails() {
           </section>
         </div>
 
-        {/* ========== Footer ========== */}
+        {/* Footer */}
         <footer className="mt-4 pt-2 text-xs px-6 flex justify-between">
           <div className="whitespace-pre-line leading-tight">
             <b>Days:</b> {dash(st.daysText)}{"\n"}
@@ -173,12 +176,16 @@ export function PrescriptionDetails() {
           </div>
         </footer>
 
-        <p className="text-[10px] text-center text-gray-500 py-1">
-          This prescription is computer-generated.
+        {/* Software Credit */}
+        <p className="text-[10px] text-center py-1" style={{
+          fontFamily: "'Roboto Mono', monospace",
+          color: "#444"
+        }}>
+          Software Developed by: e-Soft
         </p>
       </div>
 
-      {/* ========== Action Buttons (Only on Screen) ========== */}
+      {/* Screen-only Action Buttons */}
       <div className="no-print flex justify-end gap-3 p-4 max-w-4xl mx-auto">
         <button onClick={() => navigate(-1)} className="btn btn-outline btn-sm">
           <ArrowLeft size={14} /> Back

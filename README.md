@@ -6,7 +6,7 @@
 
 ---
 
-## 🚀 Live Demo
+## 🚀 Live Software Link
 
 [https://prescription.profkarimbsmmu.com/](https://prescription.profkarimbsmmu.com/)
 

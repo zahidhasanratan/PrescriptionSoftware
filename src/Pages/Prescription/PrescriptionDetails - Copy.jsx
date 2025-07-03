@@ -32,7 +32,7 @@ const css = `
   }
 
   .vertical-line {
-    border-right: 2px solid #ccc !important;
+    border-right: 2px solid #000 !important;
   }
 }
 `;
@@ -134,42 +134,36 @@ export function PrescriptionDetails() {
           </aside>
 
           {/* Medicines Section */}
-          <section className="w-2/3 pl-6 text-sm flex flex-col justify-between">
-            <div>
-              <h2 className="font-bold text-xl mb-4">
-                R<span className="align-super text-xs">x</span>
-              </h2>
-              <div className="space-y-3">
-                {medicines.map((m, i) => (
-                  <div key={i}>
-                    <b>{i + 1}.</b> <strong>{m.name}</strong>
-                    {m.type && <em> ({m.type})</em>} {m.strength && <> {m.strength}</>}
-                    <br />
-                    {m.dosage && <>Dose: {m.dosage}&emsp;</>}
-                    {m.duration && <>• Duration: {m.duration}&emsp;</>}
-                    {m.advice && <>• {m.advice}</>}
-                  </div>
-                ))}
-              </div>
-              {notes?.generalAdvice && (
-                <p className="mt-4 text-sm"><b>General Advice:</b> {notes.generalAdvice}</p>
-              )}
+          <section className="w-2/3 pl-6 text-sm">
+            <h2 className="font-bold text-xl mb-4">
+              R<span className="align-super text-xs">x</span>
+            </h2>
+            <div className="space-y-3">
+              {medicines.map((m, i) => (
+                <div key={i}>
+                  <b>{i + 1}.</b> <strong>{m.name}</strong>
+                  {m.type && <em> ({m.type})</em>} {m.strength && <> {m.strength}</>}
+                  <br />
+                  {m.dosage && <>Dose: {m.dosage}&emsp;</>}
+                  {m.duration && <>• Duration: {m.duration}&emsp;</>}
+                  {m.advice && <>• {m.advice}</>}
+                </div>
+              ))}
             </div>
-
-            {/* Signature inside Rx section */}
-            <div className="text-right mt-12 pr-4" style={{ width: "100%" }}>
-              <div className="border-t border-dotted border-gray-600 pt-1 w-40 float-right">
-                Signature
-              </div>
-            </div>
+            {notes?.generalAdvice && (
+              <p className="mt-4 text-sm"><b>General Advice:</b> {notes.generalAdvice}</p>
+            )}
           </section>
         </div>
 
         {/* ========== Footer ========== */}
-        <footer className="mt-4 pt-2 text-xs px-6 flex justify-between">
+        <footer className="border-t mt-4 pt-2 text-xs px-6 flex justify-between">
           <div className="whitespace-pre-line leading-tight">
             <b>Days:</b> {dash(st.daysText)}{"\n"}
             <b>Timings:</b> {dash(st.timingText)}
+          </div>
+          <div className="text-right" style={{ width: "160px" }}>
+            <div className="border-t border-dotted pt-1 border-gray-600">Signature</div>
           </div>
         </footer>
 

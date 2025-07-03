@@ -65,7 +65,7 @@ export const Login = () => {
       <Zoom triggerOnce>
         <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
           <h2 className="text-3xl font-bold text-teal-700 mb-6 text-center">
-            Login to Garden Hub
+            Login to Prescription Application
           </h2>
 
           <form onSubmit={handleEmailLogin} className="space-y-5">

@@ -39,7 +39,7 @@ export const Medicines = () => {
   const [showSuggestions, setShowSuggestions] = useState({});
   const [activeSuggestion, setActiveSuggestion] = useState({});
 
-  axios.defaults.baseURL = "https://prescription-ebon.vercel.app/";
+  axios.defaults.baseURL = "https://prescription-ebon.vercel.app";
 
   const fetchMedicines = async () => {
     try {

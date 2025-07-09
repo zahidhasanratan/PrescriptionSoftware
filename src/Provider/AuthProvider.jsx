@@ -20,6 +20,8 @@ export const ALLOWED_EMAILS = [
   "zhdhsn6@gmail.com",
   "zahidweb1224@gmail.com",
   "mavrick.utpal@gmail.com",
+  "info@esoft.com.bd",
+  "drkarim1990@gmail.com",
 ];
 
 const normalize = (email = "") => email.trim().toLowerCase();

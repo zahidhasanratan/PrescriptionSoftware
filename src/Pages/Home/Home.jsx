@@ -1,4 +1,4 @@
-// --- src/pages/Home.jsx ---
+// src/pages/Home.jsx
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -46,31 +46,27 @@ export const Home = () => {
 
         const prescriptions = prescriptionsRes.data;
 
-        // Last 7 Days Chart
+        // build last-7-days data
         const last7 = [...Array(7)].map((_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (6 - i));
-          const dateStr = date.toISOString().split("T")[0];
-          const label = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - i));
+          const dateStr = d.toISOString().split("T")[0];
+          const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
           const daily = prescriptions.filter(p =>
             new Date(p.createdAt).toISOString().startsWith(dateStr)
           );
-
           return { name: label, prescriptions: daily.length, visits: daily.length };
         });
 
-        // Last 30 Days Chart
+        // build last-30-days data
         const last30 = [...Array(30)].map((_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (29 - i));
-          const dateStr = date.toISOString().split("T")[0];
-          const label = date.toLocaleDateString("en-US", { day: "numeric" });
-
+          const d = new Date();
+          d.setDate(d.getDate() - (29 - i));
+          const dateStr = d.toISOString().split("T")[0];
+          const label = d.toLocaleDateString("en-US", { day: "numeric" });
           const daily = prescriptions.filter(p =>
             new Date(p.createdAt).toISOString().startsWith(dateStr)
           );
-
           return { name: label, prescriptions: daily.length, visits: daily.length };
         });
 
@@ -84,9 +80,10 @@ export const Home = () => {
         setChartData7Days(last7);
         setChartData30Days(last30);
 
+        // sort descending by date, then take first 3
         const sortedRecent = prescriptions
-          .slice(-3)
-          .reverse()
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 3)
           .map(p => ({
             name: p.patient?.name || "Unknown",
             visit_date: new Date(p.createdAt).toLocaleDateString(),
@@ -103,13 +100,18 @@ export const Home = () => {
   }, []);
 
   const chartData = selectedTab === "7" ? chartData7Days : chartData30Days;
+  const totalEntries = selectedTab === "7" ? 7 : 30;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto p-4">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-teal-800">Welcome back, Prof. Dr. Md. Anwarul Karim</h1>
-        <p className="text-gray-600 mt-1">Here’s a quick overview of your clinic today.</p>
+        <h1 className="text-2xl font-bold text-teal-800">
+          Welcome back, Prof. Dr. Md. Anwarul Karim
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Here’s a quick overview of your clinic today.
+        </p>
       </div>
 
       {/* Stats */}
@@ -120,27 +122,34 @@ export const Home = () => {
           { label: "Total Medicines", value: stats.totalMedicines },
           { label: "Today's Visits", value: stats.todaysVisits },
         ].map(item => (
-          <div key={item.label} className="bg-white shadow rounded-lg p-4 border">
+          <div
+            key={item.label}
+            className="bg-white shadow rounded-lg p-4 border"
+          >
             <p className="text-sm text-gray-500">{item.label}</p>
             <p className="text-xl font-bold text-teal-700">{item.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Performance Chart with Tabs */}
+      {/* Performance Chart */}
       <div className="bg-white p-4 border rounded-lg shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-semibold text-teal-700">Performance</h3>
-          <div className="tabs">
+          <div className="space-x-2">
             <button
               onClick={() => setSelectedTab("7")}
-              className={`btn btn-sm ${selectedTab === "7" ? "btn-primary" : "btn-ghost"}`}
+              className={`btn btn-sm ${
+                selectedTab === "7" ? "btn-primary" : "btn-ghost"
+              }`}
             >
               Last 7 Days
             </button>
             <button
               onClick={() => setSelectedTab("30")}
-              className={`btn btn-sm ${selectedTab === "30" ? "btn-primary" : "btn-ghost"}`}
+              className={`btn btn-sm ${
+                selectedTab === "30" ? "btn-primary" : "btn-ghost"
+              }`}
             >
               Last 1 Month
             </button>
@@ -149,79 +158,121 @@ export const Home = () => {
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={chartData}>
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis allowDecimals={false} />
             <Tooltip />
             <Legend />
             <CartesianGrid strokeDasharray="3 3" />
-            <Line type="monotone" dataKey="prescriptions" stroke="#0d9488" name="Prescriptions" />
-            <Line type="monotone" dataKey="visits" stroke="#6366f1" name="Visits" />
+            <Line
+              type="monotone"
+              dataKey="prescriptions"
+              stroke="#0d9488"
+              name="Prescriptions"
+            />
+            <Line
+              type="monotone"
+              dataKey="visits"
+              stroke="#6366f1"
+              name="Visits"
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link to="/add-patient" className="btn btn-primary flex gap-3 justify-center">
+        <Link
+          to="/add-patient"
+          className="btn btn-primary flex gap-2 justify-center"
+        >
           <UserPlus size={18} /> Add New Patient
         </Link>
-        <Link to="/prescriptions/write" className="btn btn-secondary flex gap-3 justify-center">
+        <Link
+          to="/prescriptions/write"
+          className="btn btn-secondary flex gap-2 justify-center"
+        >
           <ClipboardList size={18} /> Write New Prescription
         </Link>
-        <Link to="/medicines" className="btn bg-pink-500 hover:bg-pink-600 text-white flex gap-3 justify-center">
+        <Link
+          to="/medicines"
+          className="btn bg-pink-500 hover:bg-pink-600 text-white flex gap-2 justify-center"
+        >
           <Plus size={18} /> Add Medicine
         </Link>
-        <Link to="/reports" className="btn bg-orange-500 hover:bg-orange-600 text-white flex gap-3 justify-center">
+        <Link
+          to="/reports"
+          className="btn bg-orange-500 hover:bg-orange-600 text-white flex gap-2 justify-center"
+        >
           <Upload size={18} /> Upload Report
         </Link>
       </div>
 
       {/* Recent Prescriptions */}
       <div>
-        <h2 className="text-lg font-semibold mb-3 text-gray-800">Recent Prescriptions</h2>
+        <h2 className="text-lg font-semibold mb-3 text-gray-800">
+          Recent Prescriptions
+        </h2>
         <div className="bg-white border rounded-lg divide-y">
-          {recentPrescriptions.length > 0 ? recentPrescriptions.map(p => (
-            <div key={p.id} className="p-4 hover:bg-gray-50 flex justify-between items-center">
-              <div>
-                <p className="font-medium text-gray-800">{p.name}</p>
-                <p className="text-sm text-gray-500">Last visit: {p.visit_date}</p>
-              </div>
-              <Link
-                to={`/prescriptions/${p.id}`}
-                className="text-sm text-teal-600 hover:underline"
+          {recentPrescriptions.length > 0 ? (
+            recentPrescriptions.map(p => (
+              <div
+                key={p.id}
+                className="p-4 hover:bg-gray-50 flex justify-between items-center"
               >
-                View
-              </Link>
-            </div>
-          )) : (
+                <div>
+                  <p className="font-medium text-gray-800">{p.name}</p>
+                  <p className="text-sm text-gray-500">Last visit: {p.visit_date}</p>
+                </div>
+                <Link
+                  to={`/prescriptions/${p.id}`}
+                  className="text-sm text-teal-600 hover:underline"
+                >
+                  View
+                </Link>
+              </div>
+            ))
+          ) : (
             <p className="p-4 text-gray-500">No recent prescriptions.</p>
           )}
         </div>
       </div>
 
-     
-
       {/* Shortcuts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-gray-700">
-        <Link to="/patients" className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow">
+        <Link
+          to="/patients"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
           <UserPlus className="text-teal-600 mb-2" />
           <span className="text-sm font-medium">Manage Patients</span>
         </Link>
-        <Link to="/reports" className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow">
+        <Link
+          to="/reports"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
           <FileText className="text-indigo-600 mb-2" />
           <span className="text-sm font-medium">Reports</span>
         </Link>
-        <Link to="/history" className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow">
+        <Link
+          to="/history"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
           <History className="text-yellow-600 mb-2" />
           <span className="text-sm font-medium">History</span>
         </Link>
-        <Link to="/settings" className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow">
+        <Link
+          to="/settings"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
           <Settings className="text-gray-600 mb-2" />
           <span className="text-sm font-medium">Settings</span>
         </Link>
       </div>
-       {/* Last Login */}
+
+      {/* Last Login */}
       <div className="text-sm text-gray-600">
-        <p><strong>Last Login:</strong> June 29, 2025 at 9:42 PM from IP: 192.168.1.2</p>
+        <p>
+          <strong>Last Login:</strong> June 29, 2025 at 9:42 PM from IP: 192.168.1.2
+        </p>
       </div>
     </div>
   );

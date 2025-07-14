@@ -48,14 +48,12 @@ export default function PrescriptionList() {
 
   /* ─── Derived list ─── */
   const filtered = pres.filter((p) => {
-    /* text search (including prescriptionNumber) */
+    /* text search (prescriptionNumber, name, phone, ID) */
     const txt = [
       p.prescriptionNumber,
       p.patient?.name,
       p.patient?.phone,
       p.patient?.patientId,
-      p.notes?.symptoms,
-      p.notes?.generalAdvice,
       new Date(p.createdAt).toLocaleDateString(),
     ]
       .join(" ")
@@ -171,7 +169,7 @@ export default function PrescriptionList() {
         <p className="p-8 text-center text-red-600">{error}</p>
       ) : filtered.length === 0 ? (
         <div className="mt-6 border border-dashed border-teal-400 p-6 rounded text-center text-teal-700 bg-teal-50">
-          🕓 No prescription found for your criteria.
+          🕓 No prescriptions found for your criteria.
         </div>
       ) : (
         <>
@@ -182,8 +180,6 @@ export default function PrescriptionList() {
                   <th className="border px-3 py-2 text-left">Prescription #</th>
                   <th className="border px-3 py-2 text-left">Patient</th>
                   <th className="border px-3 py-2 text-left">Date</th>
-                  <th className="border px-3 py-2 text-left">Symptoms</th>
-                  <th className="border px-3 py-2 text-left">Advice</th>
                   <th className="border px-3 py-2 text-center"># Meds</th>
                   <th className="border px-3 py-2 text-center">Actions</th>
                 </tr>
@@ -199,18 +195,6 @@ export default function PrescriptionList() {
                     </td>
                     <td className="border px-3 py-2">
                       {new Date(doc.createdAt).toLocaleDateString()}
-                    </td>
-                    <td
-                      className="border px-3 py-2 truncate max-w-xs"
-                      title={doc.notes?.symptoms}
-                    >
-                      {doc.notes?.symptoms || "—"}
-                    </td>
-                    <td
-                      className="border px-3 py-2 truncate max-w-xs"
-                      title={doc.notes?.generalAdvice}
-                    >
-                      {doc.notes?.generalAdvice || "—"}
                     </td>
                     <td className="border px-3 py-2 text-center font-semibold">
                       {doc.medicines?.length || 0}

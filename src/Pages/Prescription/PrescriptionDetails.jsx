@@ -8,33 +8,12 @@ import { ArrowLeft, Printer } from "lucide-react";
 const css = `
 @media print {
   @page { size: A4 portrait; margin: 18mm 14mm 14mm 14mm; }
-
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  body * {
-    visibility: hidden !important;
-  }
-
-  #print-sheet, #print-sheet * {
-    visibility: visible !important;
-  }
-
-  #print-sheet {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .vertical-line {
-    border-right: 2px solid #999 !important;
-  }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body * { visibility: hidden !important; }
+  #print-sheet, #print-sheet * { visibility: visible !important; }
+  #print-sheet { position: absolute; inset: 0; width: 100%; }
+  .no-print { display: none !important; }
+  .vertical-line { border-right: 2px solid #999 !important; }
 }
 `;
 
@@ -88,14 +67,11 @@ export function PrescriptionDetails() {
       <div
         id="print-sheet"
         className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative flex flex-col pt-44"
-        style={{
-          minHeight: "25.6cm",
-          fontFamily: "'Inter','Segoe UI','Roboto',sans-serif"
-        }}
+        style={{ minHeight: "25.6cm", fontFamily: "'Inter','Segoe UI','Roboto',sans-serif" }}
       >
-        {/* blank top area (letterhead) via pt-24 */}
-        
-        {/* Patient Info Strip */}
+        {/* blank top area for letterhead */}
+
+        {/* Patient Info */}
         <div className="text-sm border-t border-b border-dashed border-gray-500 px-6 py-1 mb-2">
           <div className="grid grid-cols-4 gap-2">
             <div><b>Name:</b> {dash(patient?.name)}</div>
@@ -105,28 +81,35 @@ export function PrescriptionDetails() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-grow flex px-6">
-          {/* Diagnosis */}
+        {/* Main content: Complaints & Tests */}
+        <div className="flex px-6 mb-6">
           <aside className="w-1/3 pr-4 text-sm vertical-line">
-            <h3 className="font-semibold mb-2">Diagnosis</h3>
+            <h3 className="font-semibold mb-2">Complaints</h3>
             {notes?.symptoms && (
-              <p className="whitespace-pre-wrap mb-3">{notes.symptoms}</p>
+              <div
+                className="whitespace-pre-wrap mb-4"
+                dangerouslySetInnerHTML={{ __html: notes.symptoms }}
+              />
             )}
+
             {notes?.tests && (
               <>
-                <h4 className="font-semibold">Tests to do</h4>
-                <p className="whitespace-pre-wrap">{notes.tests}</p>
+                <h3 className="font-semibold mb-2">Tests to do</h3>
+                <div
+                  className="whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: notes.tests }}
+                />
               </>
             )}
           </aside>
 
-          {/* Medicines */}
+          {/* Medicines and General Advice */}
           <section className="w-2/3 pl-6 text-sm flex flex-col justify-between">
             <div>
               <h2 className="font-bold text-xl mb-4">
                 R<span className="align-super text-xs">x</span>
               </h2>
+
               <div className="space-y-3">
                 {medicines.map((m, i) => (
                   <div key={i}>
@@ -139,13 +122,20 @@ export function PrescriptionDetails() {
                   </div>
                 ))}
               </div>
+
               {notes?.generalAdvice && (
-                <p className="mt-4 text-sm"><b>General Advice:</b> {notes.generalAdvice}</p>
+                <>
+                  <h3 className="font-semibold mt-6 mb-2">General Advice</h3>
+                  <div
+                    className="whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: notes.generalAdvice }}
+                  />
+                </>
               )}
             </div>
 
             {/* Signature */}
-            <div className="text-right mt-12 pr-4" style={{ width: "100%" }}>
+            <div className="text-right mt-12 pr-4">
               <div className="border-t border-dotted border-gray-600 pt-1 w-40 float-right">
                 Signature
               </div>
@@ -153,8 +143,8 @@ export function PrescriptionDetails() {
           </section>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-4 pt-2 text-xs px-6 flex justify-between">
+        {/* Footer: Days & Timings */}
+        <footer className="mt-auto pt-2 text-xs px-6 flex justify-between">
           <div className="whitespace-pre-line leading-tight">
             <b>Days:</b> {dash(st.daysText)}{"\n"}
             <b>Timings:</b> {dash(st.timingText)}
@@ -170,7 +160,7 @@ export function PrescriptionDetails() {
         </p>
       </div>
 
-      {/* Screen-only buttons */}
+      {/* Screen-only actions */}
       <div className="no-print flex justify-end gap-3 p-4 max-w-4xl mx-auto">
         <button onClick={() => navigate(-1)} className="btn btn-outline btn-sm">
           <ArrowLeft size={14} /> Back

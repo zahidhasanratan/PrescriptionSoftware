@@ -1,3 +1,4 @@
+// src/Pages/Prescription/PrescriptionDetails.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -51,7 +52,7 @@ export function PrescriptionDetails() {
       try {
         const [rxRes, stRes] = await Promise.all([
           axios.get(`https://prescription-ebon.vercel.app/api/prescriptions/${id}`),
-          axios.get("https://prescription-ebon.vercel.app/api/settings")
+          axios.get("https://prescription-ebon.vercel.app/api/settings"),
         ]);
         if (!cancel) {
           setRx(rxRes.data);
@@ -60,7 +61,7 @@ export function PrescriptionDetails() {
         }
       } catch (e) {
         console.error(e);
-        !cancel && setUi("error");
+        if (!cancel) setUi("error");
       }
     })();
     return () => { cancel = true; };
@@ -79,7 +80,6 @@ export function PrescriptionDetails() {
 
   const { patient, medicines, notes, createdAt } = rx;
   const dash = v => v || "—";
-  const nl2br = v => v?.split("\n").map((l, i) => <span key={i}>{l}<br /></span>);
 
   return (
     <>
@@ -87,30 +87,15 @@ export function PrescriptionDetails() {
 
       <div
         id="print-sheet"
-        className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative flex flex-col"
+        className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative flex flex-col pt-44"
         style={{
           minHeight: "25.6cm",
-          fontFamily: "'Inter', 'Segoe UI', 'Roboto', sans-serif"
+          fontFamily: "'Inter','Segoe UI','Roboto',sans-serif"
         }}
       >
-        {/* Header */}
-        <header className="pb-3 mb-2 px-6 pt-4">
-          <div className="flex justify-between gap-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {dash(st.name)}
-              </h1>
-              <p className="text-sm font-medium">{dash(st.specialization)}</p>
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">{nl2br(st.designation)}</p>
-            </div>
-            <div className="text-right text-sm text-gray-700">
-              <p><b>Chamber:</b><br />{dash(st.clinicName)}<br />{nl2br(st.clinicAddress)}</p>
-              {st.phone && <p className="mt-1"><b>Phone:</b> {st.phone}</p>}
-            </div>
-          </div>
-        </header>
-
-        {/* Patient Info */}
+        {/* blank top area (letterhead) via pt-24 */}
+        
+        {/* Patient Info Strip */}
         <div className="text-sm border-t border-b border-dashed border-gray-500 px-6 py-1 mb-2">
           <div className="grid grid-cols-4 gap-2">
             <div><b>Name:</b> {dash(patient?.name)}</div>
@@ -176,16 +161,16 @@ export function PrescriptionDetails() {
           </div>
         </footer>
 
-        {/* Software Credit */}
+        {/* Auto-generated note */}
         <p className="text-[10px] text-center py-1" style={{
           fontFamily: "'Roboto Mono', monospace",
           color: "#444"
         }}>
-          Software Developed by: e-Soft
+          This prescription is computer-generated.
         </p>
       </div>
 
-      {/* Screen-only Action Buttons */}
+      {/* Screen-only buttons */}
       <div className="no-print flex justify-end gap-3 p-4 max-w-4xl mx-auto">
         <button onClick={() => navigate(-1)} className="btn btn-outline btn-sm">
           <ArrowLeft size={14} /> Back

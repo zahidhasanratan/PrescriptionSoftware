@@ -28,11 +28,17 @@ export default function PrescriptionList() {
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
 
-  /* ─── Fetch once ─── */
+  /* ─── Fetch once & sort newest-first ─── */
   useEffect(() => {
     axios
       .get("https://prescription-ebon.vercel.app/api/prescriptions")
-      .then(({ data }) => setPres(data.reverse())) // newest first
+      .then(({ data }) => {
+        // ensure newest first
+        const sorted = data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setPres(sorted);
+      })
       .catch((e) => {
         console.error(e);
         setErr("Failed to load prescriptions.");
@@ -42,7 +48,7 @@ export default function PrescriptionList() {
 
   /* ─── Derived list ─── */
   const filtered = pres.filter((p) => {
-    /* text search (name, phone, ID, notes…) */
+    /* text search (including prescriptionNumber) */
     const txt = [
       p.prescriptionNumber,
       p.patient?.name,

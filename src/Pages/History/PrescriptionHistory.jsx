@@ -1,6 +1,4 @@
-/* ------------------------------------------------------------------
-   src/Pages/History/PrescriptionHistory.jsx
-------------------------------------------------------------------- */
+// ── src/Pages/History/PrescriptionHistory.jsx ──────────────────────────
 import React, { useState, useRef, useEffect } from "react";
 import {
   History,
@@ -16,7 +14,18 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 
-/* ───────────────────── Searchable Dropdown ───────────────────── */
+/* ─── static list of categories ───────────────────────────────────── */
+const CATEGORIES = [
+  "G6PD",
+  "Hemophilia",
+  "HS",
+  "CML",
+  "COT",
+  "CCS",
+  "Thalassemia",
+];
+
+/* ─── SearchableDropdown for patients ─────────────────────────────── */
 const SearchableDropdown = ({ options, selected, onChange, optionLabel }) => {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -43,9 +52,7 @@ const SearchableDropdown = ({ options, selected, onChange, optionLabel }) => {
         onClick={() => setOpen((o) => !o)}
         className="w-full flex justify-between items-center rounded border px-3 py-2 bg-white"
       >
-        <span>
-          {selected ? optionLabel(selected) : "Select Patient"}
-        </span>
+        <span>{selected ? optionLabel(selected) : "Select Patient"}</span>
         <Search size={18} />
       </button>
 
@@ -87,7 +94,7 @@ const SearchableDropdown = ({ options, selected, onChange, optionLabel }) => {
   );
 };
 
-/* ────────────────────────── Main Component ───────────────────────── */
+/* ─── Main Component ─────────────────────────────────────────────── */
 export const PrescriptionHistory = () => {
   const navigate = useNavigate();
   const PAGE_SIZE = 6;
@@ -97,10 +104,12 @@ export const PrescriptionHistory = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
 
+  /* ─── fetch patients + prescriptions once ─────────────────────── */
   useEffect(() => {
     (async () => {
       try {
@@ -119,9 +128,14 @@ export const PrescriptionHistory = () => {
     })();
   }, []);
 
+  /* ─── filter logic ───────────────────────────────────────────── */
   const filtered = prescriptions.filter((rx) => {
     const matchPatient = selectedPatient
       ? rx.patient.patientId === selectedPatient.patientId
+      : true;
+
+    const matchCategory = selectedCategory
+      ? rx.patient.category === selectedCategory
       : true;
 
     const d = new Date(rx.createdAt).setHours(0, 0, 0, 0);
@@ -132,14 +146,16 @@ export const PrescriptionHistory = () => {
       ? d <= new Date(dateTo).setHours(23, 59, 59, 999)
       : true;
 
-    return matchPatient && matchFrom && matchTo;
+    return matchPatient && matchCategory && matchFrom && matchTo;
   });
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  /* ─── helpers ─────────────────────────────────────────────────── */
   const clearFilters = () => {
     setSelectedPatient(null);
+    setSelectedCategory("");
     setDateFrom("");
     setDateTo("");
     setPage(1);
@@ -147,16 +163,24 @@ export const PrescriptionHistory = () => {
 
   const exportCSV = () => {
     if (!filtered.length) return;
-    const header = ["Patient", "Phone", "Patient ID", "Date"];
+    const header = [
+      "Patient",
+      "Patient ID",
+      "Phone",
+      "Category",
+      "Prescription #",
+      "Date",
+    ];
     const csv = [
       header.join(","),
       ...filtered.map((r) =>
         [
           `"${r.patient.name}"`,
-          `"${r.patient.phone}"`,
           r.patient.patientId,
+          `"${r.patient.phone}"`,
+          r.patient.category,
+          r.prescriptionNumber,
           new Date(r.createdAt).toLocaleDateString(),
-          r.attachedReports?.length || (r.attachedReport ? 1 : 0),
         ].join(",")
       ),
     ].join("\n");
@@ -190,7 +214,8 @@ export const PrescriptionHistory = () => {
         width: "60rem",
         didOpen: () => {
           if (i === 0) Swal.getDenyButton().disabled = true;
-          if (i === list.length - 1) Swal.getConfirmButton().disabled = true;
+          if (i === list.length - 1)
+            Swal.getConfirmButton().disabled = true;
         },
       }).then((res) => {
         if (res.isConfirmed && i < list.length - 1) loop(i + 1);
@@ -203,12 +228,14 @@ export const PrescriptionHistory = () => {
   if (loading)
     return (
       <div className="flex justify-center items-center h-40">
-        <span className="loading loading-spinner loading-lg text-teal-600"></span>
+        <span className="loading loading-spinner loading-lg text-teal-600" />
       </div>
     );
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md max-w-6xl mx-auto font-poppins space-y-6">
+
+      {/* ─── header ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <History size={26} className="text-teal-600" />
         <h2 className="text-2xl font-semibold text-teal-800">
@@ -217,7 +244,9 @@ export const PrescriptionHistory = () => {
         <span className="text-sm text-gray-500">{filtered.length}</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl">
+      {/* ─── filters: patient / category / date ──────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl">
+        {/* patient */}
         <div>
           <label className="block font-medium mb-1">Patient</label>
           <SearchableDropdown
@@ -227,6 +256,25 @@ export const PrescriptionHistory = () => {
             optionLabel={(p) => `${p.name} — ${p.phone} — ${p.patientId}`}
           />
         </div>
+
+        {/* category */}
+        <div>
+          <label className="block font-medium mb-1">Category</label>
+          <select
+            className="input input-bordered w-full"
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+          >
+            <option value="">All Categories</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* from */}
         <div>
           <label className="block font-medium mb-1">From</label>
           <input
@@ -236,6 +284,8 @@ export const PrescriptionHistory = () => {
             onChange={(e) => setDateFrom(e.target.value)}
           />
         </div>
+
+        {/* to */}
         <div>
           <label className="block font-medium mb-1">To</label>
           <input
@@ -247,7 +297,8 @@ export const PrescriptionHistory = () => {
         </div>
       </div>
 
-      {(selectedPatient || dateFrom || dateTo) && (
+      {/* ─── clear & export ────────────────────────────────────── */}
+      {(selectedPatient || selectedCategory || dateFrom || dateTo) && (
         <div className="flex items-center gap-4">
           <button
             onClick={clearFilters}
@@ -264,62 +315,60 @@ export const PrescriptionHistory = () => {
         </div>
       )}
 
+      {/* ─── table ──────────────────────────────────────────────── */}
       {paginated.length ? (
         <>
           <div className="overflow-x-auto">
             <table className="min-w-full table-auto border-collapse border border-gray-300 text-sm">
               <thead className="bg-teal-100 text-teal-900">
                 <tr>
-                  <th className="border px-3 py-2 text-left">Patient</th>
-                  <th className="border px-3 py-2 text-left">Patient&nbsp;ID</th>
-                  <th className="border px-3 py-2 text-left">Phone</th>
-                  <th className="border px-3 py-2 text-left">Date</th>
-                 
+                  <th className="border px-3 py-2">Patient</th>
+                  <th className="border px-3 py-2">Patient ID</th>
+                  <th className="border px-3 py-2">Phone</th>
+                  <th className="border px-3 py-2">Category</th>
+                  <th className="border px-3 py-2">Rx #</th>
+                  <th className="border px-3 py-2">Date</th>
                   <th className="border px-3 py-2 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {paginated.map((rx) => {
-                  const reportsArr = rx.attachedReports?.length
-                    ? rx.attachedReports
-                    : rx.attachedReport
-                    ? [rx.attachedReport]
-                    : [];
-                  return (
-                    <tr key={rx._id} className="hover:bg-teal-50">
-                      <td className="border px-3 py-2">{rx.patient.name}</td>
-                      <td className="border px-3 py-2">
-                        {rx.patient.patientId}
-                      </td>
-                      <td className="border px-3 py-2">
-                        {rx.patient.phone}
-                      </td>
-                      <td className="border px-3 py-2">
-                        {new Date(rx.createdAt).toLocaleDateString()}
-                      </td>
-                     
-                      <td className="border px-3 py-2 text-center">
-                        <div className="flex justify-center gap-3">
-                          <button
-                            title="View prescription"
-                            onClick={() =>
-                              navigate(`/prescriptions/${rx._id}`)
-                            }
-                            className="text-teal-600 hover:text-teal-800"
-                          >
-                            <Eye size={18} />
-                          </button>
-                         
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {paginated.map((rx) => (
+                  <tr key={rx._id} className="hover:bg-teal-50">
+                    <td className="border px-3 py-2">{rx.patient.name}</td>
+                    <td className="border px-3 py-2">{rx.patient.patientId}</td>
+                    <td className="border px-3 py-2">{rx.patient.phone}</td>
+                    <td className="border px-3 py-2">{rx.patient.category}</td>
+                    <td className="border px-3 py-2 font-mono">
+                      {rx.prescriptionNumber}
+                    </td>
+                    <td className="border px-3 py-2">
+                      {new Date(rx.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="border px-3 py-2 text-center">
+                      <div className="flex justify-center gap-3">
+                        <button
+                          title="View prescription"
+                          onClick={() => navigate(`/prescriptions/${rx._id}`)}
+                          className="text-teal-600 hover:text-teal-800"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <Link
+                          to={`/reports?patientId=${rx.patient.patientId}`}
+                          title="Go to Reports Page"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          <FileText size={18} />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
-          {/* Pagination Controls */}
+          {/* pagination */}
           {filtered.length > PAGE_SIZE && (
             <div className="flex justify-center gap-4 mt-4">
               <button
@@ -329,12 +378,12 @@ export const PrescriptionHistory = () => {
               >
                 <ChevronLeft size={16} />
               </button>
-              <span>
-                Page {page} of {totalPages}
-              </span>
+              <span>Page {page} of {totalPages}</span>
               <button
                 disabled={page === totalPages}
-                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                onClick={() =>
+                  setPage((p) => Math.min(p + 1, totalPages))
+                }
                 className="btn btn-circle btn-outline btn-sm"
               >
                 <ChevronRight size={16} />

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const PAGE_SIZE = 5; // change if you want more / fewer rows
+const PAGE_SIZE = 5; // change to adjust rows per page
 
 export default function PrescriptionList() {
   const navigate = useNavigate();
@@ -44,6 +44,7 @@ export default function PrescriptionList() {
   const filtered = pres.filter((p) => {
     /* text search (name, phone, ID, notes…) */
     const txt = [
+      p.prescriptionNumber,
       p.patient?.name,
       p.patient?.phone,
       p.patient?.patientId,
@@ -57,8 +58,12 @@ export default function PrescriptionList() {
 
     /* date-range match */
     const d = new Date(p.createdAt).setHours(0, 0, 0, 0);
-    const inFrom = dateFrom ? d >= new Date(dateFrom).setHours(0, 0, 0, 0) : true;
-    const inTo = dateTo ? d <= new Date(dateTo).setHours(23, 59, 59, 999) : true;
+    const inFrom = dateFrom
+      ? d >= new Date(dateFrom).setHours(0, 0, 0, 0)
+      : true;
+    const inTo = dateTo
+      ? d <= new Date(dateTo).setHours(23, 59, 59, 999)
+      : true;
 
     return matchesSearch && inFrom && inTo;
   });
@@ -74,7 +79,6 @@ export default function PrescriptionList() {
     setPage(1);
   };
 
-  /* ---------------------------------------------------------------- */
   return (
     <div className="bg-white p-6 rounded-lg shadow-md max-w-6xl mx-auto">
       {/* Header */}
@@ -169,6 +173,7 @@ export default function PrescriptionList() {
             <table className="min-w-full table-auto border-collapse border border-gray-300 text-sm">
               <thead className="bg-teal-100 text-teal-900">
                 <tr>
+                  <th className="border px-3 py-2 text-left">Prescription #</th>
                   <th className="border px-3 py-2 text-left">Patient</th>
                   <th className="border px-3 py-2 text-left">Date</th>
                   <th className="border px-3 py-2 text-left">Symptoms</th>
@@ -180,6 +185,9 @@ export default function PrescriptionList() {
               <tbody>
                 {currentPage.map((doc) => (
                   <tr key={doc._id} className="hover:bg-teal-50">
+                    <td className="border px-3 py-2 font-mono">
+                      {doc.prescriptionNumber}
+                    </td>
                     <td className="border px-3 py-2">
                       {doc.patient?.name || "—"}
                     </td>

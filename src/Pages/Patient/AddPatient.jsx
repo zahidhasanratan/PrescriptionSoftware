@@ -1,7 +1,7 @@
 // src/Pages/Patient/AddPatient.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import { useNavigate }      from "react-router-dom";
+import Swal                from "sweetalert2";
 
 export const AddPatient = () => {
   const navigate = useNavigate();
@@ -10,36 +10,53 @@ export const AddPatient = () => {
     age: "",
     gender: "Male",
     phone: "",
+    category: "",             // ← new
   });
 
-  const handleChange = (e) => {
+  const categories = [
+    "G6PD",
+    "Hemophilia",
+    "HS",
+    "CML",
+    "COT",
+    "CCS",
+    "Thalassemia",
+  ];
+
+  const handleChange = e => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
+    const { name, age, phone, category } = formData;
 
-    // Basic client-side validation
-    if (!formData.name || !formData.age || !formData.phone) {
-      return Swal.fire("Validation Error", "Please fill in all required fields.", "warning");
+    // Basic validation
+    if (!name || !age || !phone || !category) {
+      return Swal.fire(
+        "Validation Error",
+        "Please fill in all required fields, including Category.",
+        "warning"
+      );
     }
 
     const newPatient = {
       ...formData,
-      age: parseInt(formData.age),
-      patientId: `P${Date.now()}`, // Prefix for clarity (e.g., P171234567890)
+      age: parseInt(age, 10),
+      // generate a unique ID—prefix with `P`
+      patientId: `P${Date.now()}`,
     };
 
     try {
-      const res = await fetch("https://prescription-ebon.vercel.app/api/patients", {
+      const res = await fetch("http://localhost:5000/api/patients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPatient),
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Failed to add patient");
+        const err = await res.json();
+        throw new Error(err.message || "Failed to add patient");
       }
 
       Swal.fire("Success", "Patient added successfully!", "success");
@@ -61,6 +78,7 @@ export const AddPatient = () => {
           className="input input-bordered w-full"
           required
         />
+
         <input
           name="age"
           type="number"
@@ -71,16 +89,18 @@ export const AddPatient = () => {
           required
           min={0}
         />
+
         <select
           name="gender"
-          className="select select-bordered w-full"
           value={formData.gender}
           onChange={handleChange}
+          className="select select-bordered w-full"
         >
           <option>Male</option>
           <option>Female</option>
           <option>Other</option>
         </select>
+
         <input
           name="phone"
           placeholder="Phone"
@@ -89,6 +109,25 @@ export const AddPatient = () => {
           className="input input-bordered w-full"
           required
         />
+
+        {/* ← Category dropdown */}
+        <select
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          className="select select-bordered w-full"
+          required
+        >
+          <option value="" disabled>
+            Select Category
+          </option>
+          {categories.map(cat => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+
         <button className="btn btn-primary w-full" type="submit">
           Save Patient
         </button>

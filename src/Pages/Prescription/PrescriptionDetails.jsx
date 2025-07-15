@@ -11,7 +11,7 @@ const css = `
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   body * { visibility: hidden !important; }
   #print-sheet, #print-sheet * { visibility: visible !important; }
-  #print-sheet { position: absolute; inset: 0; width: 100%; }
+  #print-sheet { position: absolute; inset: 0; width: 100%; display: flex; flex-direction: column; }
   .no-print { display: none !important; }
   .vertical-line { border-right: 2px solid #999 !important; }
 }
@@ -66,8 +66,8 @@ export function PrescriptionDetails() {
 
       <div
         id="print-sheet"
-        className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative flex flex-col pt-44"
-        style={{ minHeight: "25.6cm", fontFamily: "'Inter','Segoe UI','Roboto',sans-serif" }}
+        className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative pt-44 flex flex-col"
+        style={{ minHeight: "22.6cm", fontFamily: "'Inter','Segoe UI','Roboto',sans-serif" }}
       >
         {/* blank top area for letterhead */}
 
@@ -81,7 +81,7 @@ export function PrescriptionDetails() {
           </div>
         </div>
 
-        {/* Main content: Complaints & Tests */}
+        {/* Main Content */}
         <div className="flex px-6 mb-6">
           <aside className="w-1/3 pr-4 text-sm vertical-line">
             <h3 className="font-semibold mb-2">Complaints</h3>
@@ -91,7 +91,6 @@ export function PrescriptionDetails() {
                 dangerouslySetInnerHTML={{ __html: notes.symptoms }}
               />
             )}
-
             {notes?.tests && (
               <>
                 <h3 className="font-semibold mb-2">Tests to do</h3>
@@ -103,48 +102,44 @@ export function PrescriptionDetails() {
             )}
           </aside>
 
-          {/* Medicines and General Advice */}
-          <section className="w-2/3 pl-6 text-sm flex flex-col justify-between">
-            <div>
-              <h2 className="font-bold text-xl mb-4">
-                R<span className="align-super text-xs">x</span>
-              </h2>
-
-              <div className="space-y-3">
-                {medicines.map((m, i) => (
-                  <div key={i}>
-                    <b>{i + 1}.</b> <strong>{m.name}</strong>
-                    {m.type && <em> ({m.type})</em>} {m.strength && <> {m.strength}</>}
-                    <br />
-                    {m.dosage && <>Dose: {m.dosage}&emsp;</>}
-                    {m.duration && <>• Duration: {m.duration}&emsp;</>}
-                    {m.advice && <>• {m.advice}</>}
-                  </div>
-                ))}
-              </div>
-
-              {notes?.generalAdvice && (
-                <>
-                  <h3 className="font-semibold mt-6 mb-2">General Advice</h3>
-                  <div
-                    className="whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: notes.generalAdvice }}
-                  />
-                </>
-              )}
+          <section className="w-2/3 pl-6 text-sm flex-grow">
+            <h2 className="font-bold text-xl mb-4">
+              R<span className="align-super text-xs">x</span>
+            </h2>
+            <div className="space-y-3 mb-6">
+              {medicines.map((m, i) => (
+                <div key={i}>
+                  <b>{i + 1}.</b> <strong>{m.name}</strong>
+                  {m.type && <em> ({m.type})</em>} {m.strength && <> {m.strength}</>}
+                  <br />
+                  {m.dosage && <>Dose: {m.dosage}&emsp;</>}
+                  {m.duration && <>• Duration: {m.duration}&emsp;</>}
+                  {m.advice && <>• {m.advice}</>}
+                </div>
+              ))}
             </div>
 
-            {/* Signature */}
-            <div className="text-right mt-12 pr-4">
-              <div className="border-t border-dotted border-gray-600 pt-1 w-40 float-right">
-                Signature
-              </div>
-            </div>
+            {notes?.generalAdvice && (
+              <>
+                <h3 className="font-semibold mb-2">General Advice</h3>
+                <div
+                  className="whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: notes.generalAdvice }}
+                />
+              </>
+            )}
           </section>
         </div>
 
+        {/* Signature, pushed to bottom before footer */}
+        <div className="mt-auto px-6 pb-6 text-right">
+          <div className="border-t border-dotted border-gray-600 pt-1 w-40 ml-auto">
+            Signature
+          </div>
+        </div>
+
         {/* Footer: Days & Timings */}
-        <footer className="mt-auto pt-2 text-xs px-6 flex justify-between">
+        <footer className="text-xs px-6 flex justify-between">
           <div className="whitespace-pre-line leading-tight">
             <b>Days:</b> {dash(st.daysText)}{"\n"}
             <b>Timings:</b> {dash(st.timingText)}

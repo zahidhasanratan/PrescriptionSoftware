@@ -67,7 +67,7 @@ export function PrescriptionDetails() {
       <div
         id="print-sheet"
         className="max-w-4xl mx-auto bg-white shadow print:shadow-none relative pt-44 flex flex-col"
-        style={{ minHeight: "22.6cm", fontFamily: "'Inter','Segoe UI','Roboto',sans-serif" }}
+        style={{ minHeight: "19.6cm", fontFamily: "'Inter','Segoe UI','Roboto',sans-serif" }}
       >
         {/* blank top area for letterhead */}
 

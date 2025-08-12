@@ -8,6 +8,7 @@ import {
   FileText,
   History,
   Settings,
+  Settings2,
   HelpCircle,
   Package,
   X,
@@ -20,6 +21,7 @@ const navItems = [
   { label: "Reports", icon: FileText, path: "/reports" },
   { label: "History", icon: History, path: "/history" },
   { label: "Master Medicines", icon: Package, path: "/medicines" },
+  { label: "Complaints Settings", icon: Settings2, path: "/complaints" },
   { label: "Settings", icon: Settings, path: "/settings" },
   { label: "Help / Support", icon: HelpCircle, path: "/help" },
 ];

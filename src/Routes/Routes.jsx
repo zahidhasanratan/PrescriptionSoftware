@@ -26,6 +26,7 @@ import { EditPatient } from "../Pages/Patient/EditPatient";
 import { PatientDetails } from "../Pages/Patient/PatientDetails";
 import { PrescriptionDetails } from "../Pages/Prescription/PrescriptionDetails";
 import EditPrescription from "../Pages/Prescription/EditPrescription";
+import { Complaints } from "../Pages/Complaints/Complaints";
 
 // 🔒 Private Route wrapper with custom loader
 const PrivateRoute = ({ children }) => {
@@ -158,6 +159,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/complaints",
+        element: (
+          <PageWithTitle title="Complaints Settings">
+            <Complaints />
+          </PageWithTitle>
+        ),
+      },
+      {
         path: "/settings",
         element: (
           <PageWithTitle title="Doctor Settings">
@@ -165,6 +174,7 @@ export const router = createBrowserRouter([
           </PageWithTitle>
         ),
       },
+      
       {
         path: "/help",
         element: (

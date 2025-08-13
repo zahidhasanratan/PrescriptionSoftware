@@ -18,11 +18,8 @@ import {
  * 2) If running on localhost -> http://localhost:5000/api
  * 3) Fallback to prod -> https://prescription-ebon.vercel.app/api
  * --------------------------------------------------------------------------- */
-const API_BASE =
-  import.meta?.env?.VITE_API_BASE?.replace(/\/+$/, "") ||
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:5000/api"
-    : "https://prescription-ebon.vercel.app/api");
+const API_BASE = "https://prescription-ebon.vercel.app/api";
+
 
 // axios instance
 const api = axios.create({

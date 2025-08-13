@@ -17,9 +17,9 @@ import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
  * --------------------------------------------------------------------------- */
 const API_BASE =
   (import.meta?.env?.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/+$/, "")) ||
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:5000/api"
-    : "https://prescription-ebon.vercel.app/api");
+  "https://prescription-ebon.vercel.app/api";
+
+
 
 export default function EditPrescription() {
   const { id } = useParams();

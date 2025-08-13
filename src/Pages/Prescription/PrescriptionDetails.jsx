@@ -9,11 +9,12 @@ import { ArrowLeft, Printer } from "lucide-react";
  * 2) If running on localhost -> http://localhost:5000/api
  * 3) Fallback to prod -> https://prescription-ebon.vercel.app/api
  * --------------------------------------------------------------------------- */
-const API_BASE =
+
+
+    const API_BASE =
   (import.meta?.env?.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/+$/, "")) ||
-  (typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:5000/api"
-    : "https://prescription-ebon.vercel.app/api");
+  "https://prescription-ebon.vercel.app/api";
+
 
 /* ========== Print CSS ========== */
 const css = `

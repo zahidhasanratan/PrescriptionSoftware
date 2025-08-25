@@ -431,7 +431,7 @@ export const WritePrescription = () => {
           />
           <input
             className="input input-bordered"
-            type="number"
+            type="text"
             placeholder="Age"
             value={patientForm.age}
             onChange={(e) => setPatientForm({ ...patientForm, age: e.target.value })}

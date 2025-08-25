@@ -81,7 +81,7 @@ export const AddPatient = () => {
 
         <input
           name="age"
-          type="number"
+          type="text"
           placeholder="Age"
           value={formData.age}
           onChange={handleChange}

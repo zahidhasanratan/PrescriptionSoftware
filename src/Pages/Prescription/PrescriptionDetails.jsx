@@ -6,15 +6,11 @@ import { ArrowLeft, Printer } from "lucide-react";
 
 /* ---------------------------------- API BASE ---------------------------------
  * 1) VITE_API_URL
- * 2) If running on localhost -> http://localhost:5000/api
- * 3) Fallback to prod -> https://prescription-ebon.vercel.app/api
+ * 2) Fallback to prod -> https://prescription-ebon.vercel.app/api
  * --------------------------------------------------------------------------- */
-
-
-    const API_BASE =
+const API_BASE =
   (import.meta?.env?.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/+$/, "")) ||
   "https://prescription-ebon.vercel.app/api";
-
 
 /* ========== Print CSS ========== */
 const css = `
@@ -62,14 +58,16 @@ export function PrescriptionDetails() {
         }
       }
     })();
-    return () => { cancel = true; };
+    return () => {
+      cancel = true;
+    };
   }, [id]);
 
-  // Group the plain-string complaints by matching to catalog details (case-insensitive)
+  // Group complaints by matching catalog
   const groupedComplaints = useMemo(() => {
     if (!rx?.complaints || !Array.isArray(rx.complaints) || rx.complaints.length === 0) return null;
 
-    const groups = new Map(); // catName -> string[]
+    const groups = new Map();
     const otherKey = "Other";
 
     rx.complaints.forEach((c) => {
@@ -78,12 +76,9 @@ export function PrescriptionDetails() {
       if (!needle) return;
 
       let matchedCat = null;
-
       for (const cat of catalog) {
         const details = Array.isArray(cat?.details) ? cat.details : [];
-        const foundIdx = details.findIndex(
-          (d) => (d || "").trim().toLowerCase() === needle
-        );
+        const foundIdx = details.findIndex((d) => (d || "").trim().toLowerCase() === needle);
         if (foundIdx >= 0) {
           matchedCat = cat.name || "Category";
           break;
@@ -95,9 +90,8 @@ export function PrescriptionDetails() {
       groups.get(key).push(raw);
     });
 
-    // if only "Other" exists and equals all complaints, we can just return null to let fallback render
     if (groups.size === 1 && groups.has("Other")) {
-      return groups; // still keep grouped view; remove this line to fallback to simple list
+      return groups;
     }
     return groups;
   }, [rx?.complaints, catalog]);
@@ -130,10 +124,18 @@ export function PrescriptionDetails() {
         {/* Patient Info */}
         <div className="text-sm border-t border-b border-dashed border-gray-500 px-6 py-1 mb-2">
           <div className="grid grid-cols-4 gap-2">
-            <div><b>Name:</b> {dash(patient?.name)}</div>
-            <div><b>Age:</b> {dash(patient?.age)}</div>
-            <div><b>Sex:</b> {dash(patient?.gender)}</div>
-            <div><b>Date:</b> {createdAt ? new Date(createdAt).toLocaleDateString() : "—"}</div>
+            <div>
+              <b>Name:</b> {dash(patient?.name)}
+            </div>
+            <div>
+              <b>Age:</b> {dash(patient?.age)}
+            </div>
+            <div>
+              <b>Sex:</b> {dash(patient?.gender)}
+            </div>
+            <div>
+              <b>Date:</b> {createdAt ? new Date(createdAt).toLocaleDateString() : "—"}
+            </div>
           </div>
         </div>
 
@@ -142,7 +144,6 @@ export function PrescriptionDetails() {
           <aside className="w-1/3 pr-4 text-sm vertical-line">
             <h3 className="font-semibold mb-2">Complaints</h3>
 
-            {/* If we could group by category, show grouped view; else fallback to simple bullets */}
             {Array.isArray(complaints) && complaints.length > 0 ? (
               groupedComplaints && groupedComplaints.size > 0 ? (
                 <div className="space-y-2 mb-4">
@@ -150,21 +151,24 @@ export function PrescriptionDetails() {
                     <div key={catName}>
                       <div className="font-medium">{catName}</div>
                       <ul className="list-disc ml-5">
-                        {items.map((txt, i) => <li key={catName + i}>{txt}</li>)}
+                        {items.map((txt, i) => (
+                          <li key={catName + i}>{txt}</li>
+                        ))}
                       </ul>
                     </div>
                   ))}
                 </div>
               ) : (
                 <ul className="list-disc ml-5 mb-4">
-                  {complaints.map((c, i) => <li key={i}>{c}</li>)}
+                  {complaints.map((c, i) => (
+                    <li key={i}>{c}</li>
+                  ))}
                 </ul>
               )
             ) : (
               <div className="italic text-gray-500 mb-4">No complaints listed.</div>
             )}
 
-            {/* Additional notes (rich text) */}
             {notes?.symptoms && (
               <>
                 <h3 className="font-semibold mb-2">Additional Complaints</h3>
@@ -191,16 +195,31 @@ export function PrescriptionDetails() {
               R<span className="align-super text-xs">x</span>
             </h2>
             <div className="space-y-3 mb-6">
-              {medicines.map((m, i) => (
-                <div key={i}>
-                  <b>{i + 1}.</b> <strong>{m.name}</strong>
-                  {m.type && <em> ({m.type})</em>} {m.strength && <> {m.strength}</>}
-                  <br />
-                  {m.dosage && <>Dose: {m.dosage}&emsp;</>}
-                  {m.duration && <>• Duration: {m.duration}&emsp;</>}
-                  {m.advice && <>• {m.advice}</>}
-                </div>
-              ))}
+              {medicines.map((m, i) => {
+                // --- Format type ---
+                const typeMap = {
+                  tablet: "Tab.",
+                  capsule: "Cap.",
+                  cap: "Cap.",
+                  syrup: "Syp.",
+                  injection: "Inj.",
+                  drops: "Drops",
+                };
+                const typeLabel = m.type
+                  ? typeMap[m.type.toLowerCase()] || `${m.type}.`
+                  : "";
+
+                return (
+                  <div key={i}>
+                    <b>{i + 1}.</b>{" "}
+                    {typeLabel} <strong>{m.name} {m.strength || ""}</strong>
+                    <br />
+                    {m.dosage && <>Dose: {m.dosage}&emsp;</>}
+                    {m.duration && <>• Duration: {m.duration}&emsp;</>}
+                    {m.advice && <>• {m.advice}</>}
+                  </div>
+                );
+              })}
             </div>
 
             {notes?.generalAdvice && (
@@ -225,16 +244,17 @@ export function PrescriptionDetails() {
         {/* Footer */}
         <footer className="text-xs px-6 flex justify-between">
           <div className="whitespace-pre-line leading-tight">
-            <b>Days:</b> {dash(st.daysText)}{"\n"}
+            <b>Days:</b> {dash(st.daysText)}
+            {"\n"}
             <b>Timings:</b> {dash(st.timingText)}
           </div>
         </footer>
 
         {/* Auto-generated note */}
-        <p className="text-[10px] text-center py-1" style={{
-          fontFamily: "'Roboto Mono', monospace",
-          color: "#444"
-        }}>
+        <p
+          className="text-[10px] text-center py-1"
+          style={{ fontFamily: "'Roboto Mono', monospace", color: "#444" }}
+        >
           This prescription is computer-generated.
         </p>
       </div>

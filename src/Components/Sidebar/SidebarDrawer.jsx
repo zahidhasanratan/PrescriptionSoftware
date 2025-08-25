@@ -30,10 +30,13 @@ export const SidebarDrawer = ({ isOpen, onClose }) => {
   const drawerRef = useRef(null);
   const location = useLocation();
 
+  // ✅ Close only when the route changes
   useEffect(() => {
     if (isOpen) onClose();
-  }, [location.pathname, isOpen, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
+  // ✅ Outside click to close
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (
@@ -49,9 +52,28 @@ export const SidebarDrawer = ({ isOpen, onClose }) => {
     if (isOpen) {
       document.addEventListener("mousedown", handleOutsideClick);
     }
-
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isOpen, onClose]);
+
+  // ✅ Close on ESC & lock body scroll when open (mobile polish)
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key === "Escape" && isOpen) onClose();
+    };
+    if (isOpen) {
+      document.addEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, onClose]);
+
+  const isActive = (path) =>
+    location.pathname === path || location.pathname.startsWith(path + "/");
 
   return (
     <>
@@ -61,13 +83,17 @@ export const SidebarDrawer = ({ isOpen, onClose }) => {
           isOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
         }`}
         aria-hidden={!isOpen}
-      ></div>
+        onClick={onClose} // ✅ tap backdrop to close
+      />
 
       {/* Sidebar Drawer */}
       <aside
         ref={drawerRef}
         className={`fixed top-0 left-0 z-40 h-full w-64 bg-white border-r border-gray-200 shadow-md transform transition-transform duration-300 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Sidebar navigation"
       >
         <div className="flex items-center justify-between p-5 border-b border-gray-200">
           <h2 className="text-xl font-bold text-teal-800">Doctor Panel</h2>
@@ -80,14 +106,14 @@ export const SidebarDrawer = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <nav className="p-5 space-y-2 font-poppins">
+        <nav className="p-5 mt-5 lg:mt-0 space-y-2 font-poppins">
           {navItems.map(({ label, icon: Icon, path }) => (
             <Link
               key={label}
               to={path}
               className={`flex items-center gap-4 px-4 py-2 rounded-md transition text-sm font-medium
                 ${
-                  location.pathname === path
+                  isActive(path)
                     ? "bg-teal-500 text-white shadow"
                     : "text-gray-700 hover:bg-teal-100 hover:text-teal-700"
                 }`}

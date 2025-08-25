@@ -131,52 +131,38 @@ export const Home = () => {
           </div>
         ))}
       </div>
-
-      {/* Performance Chart */}
-      <div className="bg-white p-4 border rounded-lg shadow-sm">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-lg font-semibold text-teal-700">Performance</h3>
-          <div className="space-x-2">
-            <button
-              onClick={() => setSelectedTab("7")}
-              className={`btn btn-sm ${
-                selectedTab === "7" ? "btn-primary" : "btn-ghost"
-              }`}
-            >
-              Last 7 Days
-            </button>
-            <button
-              onClick={() => setSelectedTab("30")}
-              className={`btn btn-sm ${
-                selectedTab === "30" ? "btn-primary" : "btn-ghost"
-              }`}
-            >
-              Last 1 Month
-            </button>
-          </div>
-        </div>
-        <ResponsiveContainer width="100%" height={240}>
-          <LineChart data={chartData}>
-            <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Legend />
-            <CartesianGrid strokeDasharray="3 3" />
-            <Line
-              type="monotone"
-              dataKey="prescriptions"
-              stroke="#0d9488"
-              name="Prescriptions"
-            />
-            <Line
-              type="monotone"
-              dataKey="visits"
-              stroke="#6366f1"
-              name="Visits"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+ {/* Shortcuts */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-gray-700">
+        <Link
+          to="/patients"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
+          <UserPlus className="text-teal-600 mb-2" />
+          <span className="text-sm font-medium">Manage Patients</span>
+        </Link>
+        <Link
+          to="/reports"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
+          <FileText className="text-indigo-600 mb-2" />
+          <span className="text-sm font-medium">Reports</span>
+        </Link>
+        <Link
+          to="/history"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
+          <History className="text-yellow-600 mb-2" />
+          <span className="text-sm font-medium">History</span>
+        </Link>
+        <Link
+          to="/settings"
+          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
+        >
+          <Settings className="text-gray-600 mb-2" />
+          <span className="text-sm font-medium">Settings</span>
+        </Link>
       </div>
+    
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -236,36 +222,50 @@ export const Home = () => {
         </div>
       </div>
 
-      {/* Shortcuts */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-gray-700">
-        <Link
-          to="/patients"
-          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
-        >
-          <UserPlus className="text-teal-600 mb-2" />
-          <span className="text-sm font-medium">Manage Patients</span>
-        </Link>
-        <Link
-          to="/reports"
-          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
-        >
-          <FileText className="text-indigo-600 mb-2" />
-          <span className="text-sm font-medium">Reports</span>
-        </Link>
-        <Link
-          to="/history"
-          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
-        >
-          <History className="text-yellow-600 mb-2" />
-          <span className="text-sm font-medium">History</span>
-        </Link>
-        <Link
-          to="/settings"
-          className="flex flex-col items-center bg-white p-4 rounded-lg border hover:shadow"
-        >
-          <Settings className="text-gray-600 mb-2" />
-          <span className="text-sm font-medium">Settings</span>
-        </Link>
+       {/* Performance Chart */}
+      <div className="bg-white p-4 border rounded-lg shadow-sm">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg font-semibold text-teal-700">Performance</h3>
+          <div className="space-x-2">
+            <button
+              onClick={() => setSelectedTab("7")}
+              className={`btn btn-sm ${
+                selectedTab === "7" ? "btn-primary" : "btn-ghost"
+              }`}
+            >
+              Last 7 Days
+            </button>
+            <button
+              onClick={() => setSelectedTab("30")}
+              className={`btn btn-sm ${
+                selectedTab === "30" ? "btn-primary" : "btn-ghost"
+              }`}
+            >
+              Last 1 Month
+            </button>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={240}>
+          <LineChart data={chartData}>
+            <XAxis dataKey="name" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <CartesianGrid strokeDasharray="3 3" />
+            <Line
+              type="monotone"
+              dataKey="prescriptions"
+              stroke="#0d9488"
+              name="Prescriptions"
+            />
+            <Line
+              type="monotone"
+              dataKey="visits"
+              stroke="#6366f1"
+              name="Visits"
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Last Login */}

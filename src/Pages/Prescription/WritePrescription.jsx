@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { Plus, Trash2, UserPlus, Paperclip, Eye, Search } from "lucide-react";
@@ -8,18 +8,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
-/* ---------------------------------- API BASE ---------------------------------
- * Priority:
- * 1) VITE_API_URL (e.g., http://localhost:5000/api)
- * 2) If running on localhost -> http://localhost:5000/api
- * 3) Fallback to prod -> https://prescription-ebon.vercel.app/api
- * --------------------------------------------------------------------------- */
+/* ---------------------------------- API BASE --------------------------------- */
 const API_BASE =
   (import.meta?.env?.VITE_API_URL && import.meta.env.VITE_API_URL.replace(/\/+$/, "")) ||
   "https://prescription-ebon.vercel.app/api";
 
-
-// Static categories (your existing)
+// Static categories
 const CATEGORIES = ["G6PD", "Hemophilia", "HS", "CML", "COT", "CCS", "Thalassemia"];
 
 export const WritePrescription = () => {
@@ -27,6 +21,11 @@ export const WritePrescription = () => {
   const location = useLocation();
 
   const { patientId: incomingPatientId, forwardedReports = [] } = location.state || {};
+
+  // ===== Refs for click-outside handling =====
+  const patientSearchRef = useRef(null);      // wraps patient search input + dropdown
+  const compCatRef = useRef(null);            // wraps complaints category input + dropdown
+  const medFieldRefs = useRef({});            // map of field -> wrapper node
 
   // Patients
   const [patients, setPatients] = useState([]);
@@ -65,7 +64,7 @@ export const WritePrescription = () => {
     generalAdvice: "",
   });
 
-  /* ====================== NEW: Complaints Catalog & Selection ====================== */
+  /* ====================== Complaints Catalog & Selection ====================== */
   const [complaintsCatalog, setComplaintsCatalog] = useState([]); // [{_id, name, details:[]}]
   const [compCatInput, setCompCatInput] = useState("");
   const [compCatSuggest, setCompCatSuggest] = useState([]);
@@ -100,7 +99,6 @@ export const WritePrescription = () => {
       .then((r) => Array.isArray(r.data) && setAllMedicines(r.data))
       .catch(() => Swal.fire("Error", "Failed to load medicines", "error"));
 
-    // Load complaints catalog
     axios
       .get(`${API_BASE}/complaints`)
       .then(({ data }) => setComplaintsCatalog(Array.isArray(data) ? data : []))
@@ -190,6 +188,7 @@ export const WritePrescription = () => {
     dosage: ["1+0+1", "1+1+1", "0+1+0", "1+0+0", "0+0+1"],
     advice: ["Before Meal", "After Meal", "With Water"],
   };
+
   const buildSuggestions = (field, val) => {
     const pool = new Set(staticDict[field] || []);
     allMedicines.forEach((m) => {
@@ -199,10 +198,12 @@ export const WritePrescription = () => {
       if (field === "dosage" && m.defaultDosage) pool.add(m.defaultDosage);
       if (field === "advice" && m.usageAdvice) pool.add(m.usageAdvice);
     });
-    const list = [...pool].filter((v) => v.toLowerCase().includes(val.toLowerCase()));
+    const q = (val ?? "").toLowerCase();
+    const list = [...pool].filter((v) => v.toLowerCase().includes(q));
     setSuggestions((s) => ({ ...s, [field]: list }));
     setHighlighted((h) => ({ ...h, [field]: 0 }));
   };
+
   const autofillFromName = (name) => {
     const m = allMedicines.find((x) => x.name === name);
     if (!m) return;
@@ -215,11 +216,15 @@ export const WritePrescription = () => {
       duration: "7 days",
     });
   };
+
   const handleMedChange = (e) => {
     const { name, value } = e.target;
     setMedicineInput((mi) => ({ ...mi, [name]: value }));
-    if (["name", "type", "strength", "dosage", "advice"].includes(name)) buildSuggestions(name, value);
+    if (["name", "type", "strength", "dosage", "advice", "duration"].includes(name)) {
+      buildSuggestions(name, value);
+    }
   };
+
   const handleMedKeyDown = (e, field) => {
     const list = suggestions[field] || [];
     if (!list.length) return;
@@ -239,6 +244,7 @@ export const WritePrescription = () => {
       if (field === "name") autofillFromName(choice);
     }
   };
+
   const addMedicine = () => {
     if (!medicineInput.name || !medicineInput.dosage) return;
     setAddedMedicines((a) => [...a, medicineInput]);
@@ -274,8 +280,7 @@ export const WritePrescription = () => {
     showAt(0);
   };
 
-  /* ============================ NEW: Complaints UX ============================ */
-  // Suggest categories as you type
+  /* ============================ Complaints UX ============================ */
   useEffect(() => {
     const q = compCatInput.trim().toLowerCase();
     if (!q) return setCompCatSuggest([]);
@@ -286,21 +291,18 @@ export const WritePrescription = () => {
     setCompCatSuggest(byName);
   }, [compCatInput, complaintsCatalog]);
 
-  // Select a category by name
   const selectCategoryByName = (name) => {
     const cat = complaintsCatalog.find((c) => c.name.toLowerCase() === name.toLowerCase());
     if (cat) {
       setActiveCatId(cat._id);
       setCompCatInput(cat.name);
-      setCompCatSuggest([]);
+      setCompCatSuggest([]); // close after selection
     }
   };
 
-  // Toggle a detail line
   const toggleDetail = (cat, idx, checked) => {
     if (!cat) return;
     if (checked) {
-      // add if not already
       if (!isDetailSelected(cat._id, idx)) {
         setSelectedComplaints((prev) => [
           ...prev,
@@ -308,29 +310,25 @@ export const WritePrescription = () => {
         ]);
       }
     } else {
-      // remove
       setSelectedComplaints((prev) => prev.filter((s) => !(s.catId === cat._id && s.index === idx)));
     }
   };
 
-  // Edit a selected detail's text inline
   const editSelectedDetail = (catId, idx, newText) => {
     setSelectedComplaints((prev) =>
       prev.map((s) => (s.catId === catId && s.index === idx ? { ...s, text: newText } : s))
     );
   };
 
-  // Remove from Selected list
   const removeSelectedComplaint = (catId, idx) => {
     setSelectedComplaints((prev) => prev.filter((s) => !(s.catId === catId && s.index === idx)));
   };
 
-  // Optional helper to quickly adjust "X days" number (+/-)
   const nudgeDays = (catId, idx, delta) => {
     const entry = selectedComplaints.find((s) => s.catId === catId && s.index === idx);
     if (!entry) return;
     const m = entry.text.match(/(\d+)\s*(day|days)\b/i);
-    if (!m) return; // no number to tweak
+    if (!m) return;
     const current = parseInt(m[1], 10);
     const next = Math.max(1, current + delta);
     const replaced = entry.text.replace(/(\d+)\s*(day|days)\b/i, `${next} days`);
@@ -344,13 +342,11 @@ export const WritePrescription = () => {
     const pat = await createPatientIfNeeded();
     if (!pat) return;
 
-    // Build prescriptionNumber
     const prefix = (patientForm.category || "").slice(0, 2).toUpperCase();
     const allRx = await axios.get(`${API_BASE}/prescriptions`).then((r) => r.data);
     const serial = allRx.filter((r) => r.prescriptionNumber?.startsWith(prefix)).length + 1;
     const prescriptionNumber = `${prefix}/${serial}`;
 
-    // Compile complaints (array of strings)
     const complaints = selectedComplaints.map((s) => s.text);
 
     const payload = {
@@ -362,9 +358,9 @@ export const WritePrescription = () => {
         patientId: pat.patientId,
         category: patientForm.category,
       },
-      complaints, // <-- NEW
+      complaints,
       medicines: addedMedicines,
-      notes, // HTML from CKEditor
+      notes,
       attachedReports: combinedReports,
       prescriptionNumber,
     };
@@ -376,6 +372,53 @@ export const WritePrescription = () => {
     } catch (err) {
       console.error(err);
       Swal.fire("Error", "Failed to save prescription", "error");
+    }
+  };
+
+  /* ============================ Global click-outside closer ============================ */
+  useEffect(() => {
+    const onDocMouseDown = (e) => {
+      const target = e.target;
+
+      // Patient search dropdown
+      if (patientSearchRef.current && !patientSearchRef.current.contains(target)) {
+        setShowDropdown(false);
+      }
+
+      // Complaints category suggestions
+      if (compCatRef.current && !compCatRef.current.contains(target)) {
+        setCompCatSuggest([]);
+      }
+
+      // Medicine field suggestions (each field wrapper)
+      if (medFieldRefs.current) {
+        const next = {};
+        Object.entries(medFieldRefs.current).forEach(([field, node]) => {
+          if (node && !node.contains(target)) {
+            next[field] = []; // close if click outside this field
+          } else {
+            next[field] = suggestions[field] || [];
+          }
+        });
+        if (Object.keys(next).length) setSuggestions(next);
+      }
+    };
+
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestions]);
+
+  /* ============================ NEW: Clear category input on re-focus ============================ */
+  const handleCompCatFocus = () => {
+    // When user returns to the Category input to add another category:
+    // - Clear the text box
+    // - Hide the previously active details panel to avoid confusion
+    // - Also clear suggestions (fresh typing)
+    if (compCatInput !== "" || activeCategory) {
+      setCompCatInput("");
+      setActiveCatId(null);
+      setCompCatSuggest([]);
     }
   };
 
@@ -395,7 +438,7 @@ export const WritePrescription = () => {
       )}
 
       {/* Patient search + form */}
-      <div className="space-y-4 relative">
+      <div className="space-y-4 relative" ref={patientSearchRef}>
         <label className="font-semibold block mb-1">Search Patient</label>
         <input
           className="input input-bordered w-full"
@@ -414,7 +457,7 @@ export const WritePrescription = () => {
                 <li
                   key={p._id}
                   className="px-4 py-2 hover:bg-teal-100 cursor-pointer"
-                  onClick={() => handleSelectPatient(p)}
+                  onMouseDown={() => handleSelectPatient(p)}
                 >
                   {p.name} — {p.phone}
                 </li>
@@ -468,8 +511,8 @@ export const WritePrescription = () => {
         )}
       </div>
 
-      {/* ============================ NEW: Complaints section ============================ */}
-      <div className="space-y-3">
+      {/* ============================ Complaints section ============================ */}
+      <div className="space-y-3" ref={compCatRef}>
         <label className="font-semibold block">Complaints</label>
 
         {/* Category search + suggest */}
@@ -481,16 +524,22 @@ export const WritePrescription = () => {
                 className="input input-bordered w-full pl-8"
                 placeholder="e.g., Fever, Hair Fall"
                 value={compCatInput}
+                onFocus={handleCompCatFocus}
                 onChange={(e) => setCompCatInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && compCatSuggest.length) selectCategoryByName(compCatSuggest[0]);
+                  if (e.key === "Enter" && compCatSuggest.length) {
+                    selectCategoryByName(compCatSuggest[0]);
+                  }
                 }}
               />
               <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
             <button
               className="btn btn-outline btn-sm"
-              onClick={() => selectCategoryByName(compCatInput)}
+              onClick={() => {
+                selectCategoryByName(compCatInput);
+                setCompCatSuggest([]); // force close on Use click
+              }}
               title="Select category"
             >
               Use
@@ -498,7 +547,7 @@ export const WritePrescription = () => {
           </div>
 
           {compCatSuggest.length > 0 && (
-            <ul className="absolute bg-white border shadow w-full max-h-44 overflow-auto mt-1 rounded z-10">
+            <ul className="absolute bg-white border shadow w-full max-h-44 overflow-auto mt-1 rounded z-20">
               {compCatSuggest.map((name) => (
                 <li
                   key={name}
@@ -608,7 +657,13 @@ export const WritePrescription = () => {
         <label className="font-semibold block">Add Medicine</label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {["name", "type", "strength", "dosage", "advice", "duration"].map((field) => (
-            <div key={field} className="relative">
+            <div
+              key={field}
+              className="relative"
+              ref={(el) => {
+                if (el) medFieldRefs.current[field] = el;
+              }}
+            >
               <input
                 name={field}
                 className="input input-bordered w-full"
@@ -616,10 +671,11 @@ export const WritePrescription = () => {
                 value={medicineInput[field]}
                 onChange={handleMedChange}
                 onKeyDown={(e) => handleMedKeyDown(e, field)}
+                onFocus={() => buildSuggestions(field, "")}  // show ALL options on focus
                 onBlur={() => field === "name" && autofillFromName(medicineInput.name)}
               />
               {suggestions[field]?.length > 0 && (
-                <ul className="absolute bg-white border shadow w-full max-h-40 overflow-auto mt-1 rounded z-10">
+                <ul className="absolute bg-white border shadow w-full max-h-40 overflow-auto mt-1 rounded z-20">
                   {suggestions[field].map((opt, i) => (
                     <li
                       key={opt + i}
@@ -650,7 +706,7 @@ export const WritePrescription = () => {
           {addedMedicines.map((m, i) => (
             <div key={i} className="flex justify-between items-center bg-white p-3 rounded border">
               <div>
-                <strong>{m.name}</strong> ({m.type}) {m.strength}
+                <strong>{m.name}</strong> {m.type ? `(${m.type})` : ""} {m.strength}
                 <br />
                 <small>
                   Dosage: {m.dosage}, Duration: {m.duration}, Advice: {m.advice}
